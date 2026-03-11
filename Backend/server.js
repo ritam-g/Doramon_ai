@@ -1,7 +1,8 @@
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import app from './src/app.js';
 import connectDB from './src/config/db.js';
+import { chatWithGeminiAiModel,chatWithMistralAiModel } from './src/services/ai.service.js';
+
 dotenv.config()
 
 
@@ -11,5 +12,11 @@ connectDB()
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  
 });
+async function callingAi() {
+  console.log(await chatWithMistralAiModel("what do you think about india?"));
+  
+}
+callingAi()
 

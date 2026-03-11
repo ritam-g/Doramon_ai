@@ -12,6 +12,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/core": "^1.1.32",
+    "@langchain/google": "^0.1.6",
+    "@langchain/google-genai": "^2.1.25",
+    "@mistralai/mistralai": "^1.15.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
