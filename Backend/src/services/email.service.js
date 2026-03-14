@@ -14,22 +14,28 @@ const transporter = nodemailer.createTransport({
 })
 
 // Function to send email
-const sendEmail = async (to, subject, text, html) => {
+const sendEmail = async ({ to, subject, text, html }) => {
   try {
+
+    console.log("EMAIL INPUT:", { to, subject, text, html });
+
     const info = await transporter.sendMail({
-      from: `${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      text,
-      html,
+      from: process.env.GOOGLE_EMAIL_USER,
+      to: to,
+      subject: subject,
+      text: text,
+      html: html
     });
 
-    console.log('Message sent: %s', info.messageId);
-    return info;
+    console.log("Message sent:", info.messageId);
+
+    return `Email sent successfully to ${to}`;
+
   } catch (error) {
-    console.error('Error sending email:', error.message);
-    // Don't throw - just log the error to prevent app crash
-    return null;
+
+    console.error("Error sending email:", error.message);
+    return `Email failed: ${error.message}`;
+
   }
 };
 
