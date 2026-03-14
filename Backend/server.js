@@ -15,7 +15,7 @@ app.listen(PORT, () => {
   
 });
 async function callingAi() {
-  console.log(await chatWithMistralAiModel("what do you think about india?"));
+  await chatWithMistralAiModel()
   
 }
 callingAi()
