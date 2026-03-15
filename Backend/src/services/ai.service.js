@@ -7,7 +7,10 @@ import { tool } from "@langchain/core/tools";
 import sendEmail from "./email.service.js";
 import { z } from "zod";
 import { createAgent } from "langchain"
+import webSerch from "./webSearch.service.js";
 
+
+/** all toll are here */
 const emailTool = tool(
     sendEmail,
     {
@@ -23,10 +26,21 @@ const emailTool = tool(
     }
 )
 
+const RealTimeSearch=tool(
+    webSerch,
+    {
+        name:"webSearch",
+        description:"Use this tool to search web",
+        schema:z.object({
+            searchQuery:z.string().describe("Search Query")
+        })
+    }
+)
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
+    terminal: false
 });
 // here definding the model
 const model = new ChatGoogleGenerativeAI({
@@ -41,7 +55,7 @@ const model2 = new ChatMistralAI({
 
 const agent = createAgent({
     model: model2,
-    tools: [emailTool],
+    tools: [emailTool,RealTimeSearch],
 
 });
 // here calling the model
@@ -54,11 +68,11 @@ let messageHistory = [];
 export async function chatWithMistralAiModel() {
 
     while (true) {
-        const message = await rl.question("\x1b[32mYou:\x1b[0m ");
+        const message = (await rl.question("\x1b[32mYou:\x1b[0m ")).trim();
 
         // store user message
         messageHistory.push(new HumanMessage(message));
-        console.log('human message', messageHistory)
+        // console.log('human message', messageHistory)
         // send conversation to agent
         const response = await agent.invoke({
             messages: messageHistory
