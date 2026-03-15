@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from 'react-router';
+import { useAuth } from "../hook/useAuth";
+import { useSelector } from "react-redux";
 
 const Register = () => {
   const navigate = useNavigate();
-
+  const { handelRegister } = useAuth()
+  const { user, loading, error } = useSelector(state => state.auth)
   // -------------------------
   // Two-way binding states
   // -------------------------
@@ -22,9 +25,10 @@ const Register = () => {
       email,
       password,
     };
-
-    console.log("Register payload:", payload);
+    handelRegister(payload)
+    navigate('/login')
   };
+  if (loading) return <h1>Loading...</h1>
 
   return (
     <section className="min-h-screen bg-zinc-950 px-4 py-10 text-zinc-100 sm:px-6 lg:px-8">
