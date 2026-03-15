@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { handelRegister } = useAuth()
+  const { handleRegister } = useAuth()
   const { user, loading, error } = useSelector(state => state.auth)
   // -------------------------
   // Two-way binding states
@@ -25,7 +25,7 @@ const Register = () => {
       email,
       password,
     };
-    handelRegister(payload)
+    handleRegister(payload)
     navigate('/login')
   };
   if (loading) return <h1>Loading...</h1>

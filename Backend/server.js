@@ -20,10 +20,11 @@ async function main() {
     });
 
     // wait a little before starting CLI
-    setTimeout(async () => {
-      console.log("\n🤖 AI Chat Started\n");
-      await chatWithMistralAiModel();
-    }, 500);
+    //! stoping for morgan 
+    // setTimeout(async () => {
+    //   console.log("\n🤖 AI Chat Started\n");
+    //   await chatWithMistralAiModel();
+    // }, 500);
 
   } catch (err) {
     console.error("Error:", err);

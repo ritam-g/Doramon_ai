@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from 'react-router';
 import { useAuth } from "../hook/useAuth";
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { handelLogin } = useAuth()
+  const { handleLogin } = useAuth()
   const { user, loading, error } = useSelector(state => state.auth)
   // -------------------------
   // Two-way binding states
@@ -13,18 +14,26 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/')
+    }
+  }, [user, navigate])
+
   // -------------------------
   // Form submit (only UI logic)
   // -------------------------
-  const submitForm = (event) => {
+  
+  
+  const submitForm = async (event) => {
     event.preventDefault();
 
     const payload = {
       email,
       password
     };
-    handelLogin(payload)
-    navigate('/')
+    await handleLogin(payload)
   };
   if (loading) return <h1>Loading...</h1>
 
@@ -112,3 +121,4 @@ const Login = () => {
 };
 
 export default Login;
+

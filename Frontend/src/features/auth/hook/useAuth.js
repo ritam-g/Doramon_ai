@@ -1,15 +1,15 @@
 import { useDispatch } from "react-redux";
 import { GetMeApi, loginApi, RegisterApi } from "../services/auth.api";
-import { setError, setLoading, setUSer } from "../../../app/store/features/auth.slice";
+import { setError, setLoading, setUser } from "../../../app/store/features/auth.slice";
 
 import { useCallback } from 'react'
 export function useAuth() {
     const dispatch = useDispatch()
-    async function handelLogin({ email, password }) {
+    async function handleLogin({ email, password }) {
         try {
             dispatch(setLoading(true))
             const data = await loginApi({ email, password })
-            dispatch(setUSer(data.user))
+            dispatch(setUser(data.user))
 
         } catch (error) {
             dispatch(setError(error.message))
@@ -17,7 +17,7 @@ export function useAuth() {
             dispatch(setLoading(false))
         }
     }
-    async function handelRegister({ username, email, password }) {
+    async function handleRegister({ username, email, password }) {
         try {
             dispatch(setLoading(true))
             const data = await RegisterApi({ username, email, password })
@@ -27,13 +27,14 @@ export function useAuth() {
             dispatch(setLoading(false))
         }
     }
-    async function handelGetMe() {
+    async function handleGetMe() {
         try {
             dispatch(setLoading(true))
             const data = await GetMeApi()
-            dispatch(setUSer(data.user))
-
+            dispatch(setUser(data.user))
+            
         } catch (error) {
+            dispatch(setUser(null))
             dispatch(setError(error.message))
         } finally {
             dispatch(setLoading(false))
@@ -41,8 +42,8 @@ export function useAuth() {
     }
 
     return {
-        handelLogin,
-        handelRegister,
-        handelGetMe
+        handleLogin,
+        handleRegister,
+        handleGetMe
     }
 }
