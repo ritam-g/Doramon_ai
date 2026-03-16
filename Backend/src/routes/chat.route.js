@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authVerifyMiddleware } from "../middleware/auth.middleware.js";
 import { messageValidation } from "../middleware/validation.js";
-import { chatDeleteController, getMessageController, sendMessageController } from "../controller/chat.controller.js";
+import { chatDeleteController, getChatControlelr, getMessageController, sendMessageController } from "../controller/chat.controller.js";
 
 const chatRouter = Router();
 
@@ -26,5 +26,11 @@ chatRouter.get("/:chatId",authVerifyMiddleware,getMessageController)
  * @access - Private
  */
 chatRouter.delete("/delete",authVerifyMiddleware,chatDeleteController)
-
+/** getchat 
+ * @description - user can get message but he should login first
+ * @method - get method
+ * @route - protected
+ * @access - Private
+ */
+chatRouter.get("/",authVerifyMiddleware,getChatControlelr)
 export default chatRouter

@@ -157,3 +157,21 @@ export async function chatDeleteController(req, res, next) {
     });
   }
 }
+
+export async function getChatControlelr(req, res, next) {
+  try {
+    const chats = await chatModel.find({
+      user: req.user.id
+    })
+    return res.status(200).json({
+      success: true,
+      chats
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
