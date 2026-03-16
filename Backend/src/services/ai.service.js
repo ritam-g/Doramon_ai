@@ -1,6 +1,6 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatMistralAI } from "@langchain/mistralai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import readline from "readline/promises";
 import "dotenv/config";
 import { tool } from "@langchain/core/tools";
@@ -8,6 +8,8 @@ import sendEmail from "./email.service.js";
 import { z } from "zod";
 import { createAgent } from "langchain"
 import webSerch from "./webSearch.service.js";
+// import { ms } from "zod/v4/locales"; // Removed incorrect import
+
 
 
 /** all toll are here */
@@ -26,13 +28,13 @@ const emailTool = tool(
     }
 )
 
-const RealTimeSearch=tool(
+const RealTimeSearch = tool(
     webSerch,
     {
-        name:"webSearch",
-        description:"Use this tool to search web",
-        schema:z.object({
-            searchQuery:z.string().describe("Search Query")
+        name: "webSearch",
+        description: "Use this tool to search web",
+        schema: z.object({
+            searchQuery: z.string().describe("Search Query")
         })
     }
 )
@@ -55,7 +57,7 @@ const model2 = new ChatMistralAI({
 
 const agent = createAgent({
     model: model2,
-    tools: [emailTool,RealTimeSearch],
+    tools: [emailTool, RealTimeSearch],
 
 });
 // here calling the model
@@ -63,7 +65,7 @@ export async function chatWithGeminiAiModel(chat) {
     return (await model.invoke(chat)).text;
 }
 
-let messageHistory = [];
+
 // crete desctip of thie sfunciotn 
 /**  
  * @description - chat with ai
@@ -71,35 +73,53 @@ let messageHistory = [];
  * @route - /api/ai
  * @access - Public
  */
-export async function chatWithMistralAiModel({message}) {
+export async function chatWithMistralAiModel({ message }) {
 
-    while (true) {
-        // store user message
-        messageHistory.push(new HumanMessage(message));
-        // console.log('human message', messageHistory)
-        // send conversation to agent
-        const response = await agent.invoke({
-            messages: messageHistory
-        });
-        // console.log('ai message',response)
-        // get the last AI message
-        // const aiMessage = response.messages[response.messages.length - 1];
-        const aiMessage = response.messages.at(-1);
+    //NOTE - THE PROBLE OF THIS THE AI IS NOT RESPONDING BECUSE AI WANT MORE CONTEXT
+    // const response = await agent.invoke([
+    //     new HumanMessage(message)
+    // ])
+    //todo  makig sing json to more context for the ai 
+    const allMessages = message.map(msg => {
+        if (msg.role == "user") {
+            return new HumanMessage(msg.content)
+        } else {
+            return new AIMessage(msg.content)
+        }
+    })
 
-        // store AI message in history
-        messageHistory.push(aiMessage);
+    console.log("🚀 Sending to Agent with messages:", allMessages);
 
-        // print response
-        return aiMessage.content;
+    // Some agents (like LangGraph-based ones) expect a 'messages' key in the input object.
+    const response = await agent.invoke({
+        messages: allMessages
+    });
 
-        console.log(`\x1b[34m[AI]\x1b[0m ${aiMessage.content}`);
+    console.log("🤖 AI Agent Raw Response:", response);
+    
+    // Determine the text response. 
+    // If it's a LangGraph agent, the last message in the returned 'messages' state is the AI's response.
+    // Otherwise, check for 'output', 'text', or 'content'.
+    let aiText = "";
+    if (response.output) {
+        aiText = response.output;
+    } else if (response.text) {
+        aiText = response.text;
+    } else if (response.content) {
+        aiText = response.content;
+    } else if (Array.isArray(response.messages)) {
+        const lastMsg = response.messages[response.messages.length - 1];
+        aiText = lastMsg.text || lastMsg.content || "";
     }
 
+    return aiText;
+
+    
 }
 
 //making title base on the message
 export async function messageTitleGenerator(message) {
-    const response=await model.invoke([
+    const response = await model.invoke([
         new SystemMessage("you are a helpful assistant that generates a title for a message based on the content of the message"),
         new HumanMessage(message)
     ])

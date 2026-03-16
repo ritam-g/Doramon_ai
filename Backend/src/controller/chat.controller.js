@@ -2,44 +2,92 @@ import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
 import { chatWithMistralAiModel, messageTitleGenerator } from "../services/ai.service.js";
 
-export async function sendMessageController(req, res, next) {
-    try {
-        const { message } = req.body
-        //NOTE - feture will be title on user message
-        const title = await messageTitleGenerator(message)
-        //ANCHOR - create chat
-        const chat =await chatModel.create({
-            user: req.user.id,
-            title: title
-        })
-        //ANCHOR - send message to ai
-        const response = await chatWithMistralAiModel({ message })
-        //TODO save in the databse
-        
-        const userMessage=await messageModel.create({
-            chat:chat._id,
-            content:message,
-            role:'user'
-        })
+/**
+ * @description Send message to AI
+ * @route POST /api/chats/message
+ */
 
-        const aiMessage=await messageModel.create({
-            chat:chat._id,
-            content:response,
-            role:'ai'
-        })
+export async function sendMessageController(req, res) {
+  try {
+    const { message, chatId } = req.body;
 
+    let chat = null;
+    let title = null;
 
-        res.status(200).json(
-            {
-                success: true,
-                message: 'Message sent',
-                AiMessage:aiMessage,
-                userMessage:userMessage
-            });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+    /* =============================
+       CREATE CHAT IF FIRST MESSAGE
+    ============================== */
 
+    if (!chatId) {
+      title = await messageTitleGenerator(message);
+      chat = await chatModel.create({
+        user: req.user.id,
+        title: title,
+      });
     }
-}
 
+    const activeChatId = chatId || chat._id;
+
+    /* =============================
+       SAVE USER MESSAGE
+    ============================== */
+
+    const userMessage = await messageModel.create({
+      chat: activeChatId,
+      content: message,
+      role: "user",
+    });
+
+    /* =============================
+       GET CHAT HISTORY
+    ============================== */
+
+    const dbMessages = await messageModel
+      .find({ chat: activeChatId })
+      .sort({ createdAt: 1 })
+      .select("role content")
+      .lean();
+
+    console.log("✅ DB Messages count:", dbMessages.length, dbMessages);
+
+    if (dbMessages.length === 0) {
+      throw new Error("No messages found after save");
+    }
+
+    /* =============================
+       SEND TO AI
+    ============================== */
+
+    const aiResponse = await chatWithMistralAiModel({
+      message: dbMessages,
+    });
+
+    /* =============================
+       SAVE AI RESPONSE
+    ============================== */
+
+    const aiMessage = await messageModel.create({
+      chat: activeChatId,
+      content: aiResponse,
+      role: "ai",
+    });
+
+    /* =============================
+       RESPONSE
+    ============================== */
+
+    res.status(200).json({
+      success: true,
+      chatId: activeChatId,
+      userMessage,
+      aiMessage,
+    });
+
+  } catch (error) {
+    console.error("Chat Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
