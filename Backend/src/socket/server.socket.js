@@ -1,4 +1,4 @@
-import { io, Server } from 'socket.io'
+import {  Server } from 'socket.io'
 let io
 export function initSocket(httpServer) {
     //NOTE - creating server with httpServer
