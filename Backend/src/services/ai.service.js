@@ -1,6 +1,6 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatMistralAI } from "@langchain/mistralai";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import readline from "readline/promises";
 import "dotenv/config";
 import { tool } from "@langchain/core/tools";
@@ -64,7 +64,13 @@ export async function chatWithGeminiAiModel(chat) {
 }
 
 let messageHistory = [];
-
+// crete desctip of thie sfunciotn 
+/**  
+ * @description - chat with ai
+ * @method - POST
+ * @route - /api/ai
+ * @access - Public
+ */
 export async function chatWithMistralAiModel({message}) {
 
     while (true) {
@@ -90,5 +96,16 @@ export async function chatWithMistralAiModel({message}) {
     }
 
 }
+
+//making title base on the message
+export async function messageTitleGenerator(message) {
+    const response=await model.invoke([
+        new SystemMessage("you are a helpful assistant that generates a title for a message based on the content of the message"),
+        new HumanMessage(message)
+    ])
+
+    return response.text
+}
+
 
 
