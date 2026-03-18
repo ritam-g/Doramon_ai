@@ -12,7 +12,7 @@ const chatRouter = Router();
  * @access - Private
  */
 chatRouter.post("/message", messageValidation, authVerifyMiddleware, sendMessageController)
-/** wreite a comment for hte route
+/** 
  * @description - user can get message but he should login first
  * @method - get method
  * @route - protected
