@@ -31,7 +31,7 @@ const chatSlice = createSlice({
             state.chats[chatId].lastUpdated = new Date().toISOString()
         },
         addMessage: (state, action) => {
-            const { chatId, message, role } = action.payload
+            const { chatId, message, role, messageId } = action.payload
 
             // Safety check:
             // if message comes before chat exists, create a basic chat first.
@@ -46,6 +46,7 @@ const chatSlice = createSlice({
 
             // Push one message into that chat conversation.
             state.chats[chatId].messages.push({
+                id: messageId || `${role}-${Date.now()}`,
                 role,
                 content: message
             })

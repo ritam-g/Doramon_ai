@@ -1,234 +1,108 @@
-import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { useDispatch, useSelector } from "react-redux";
-import { setCurrentChatId } from "../../../app/store/features/chat.slice";
-import { useChat } from "../hooks/useChat";
+import React, { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import { useSelector } from 'react-redux'
+import { useChat } from '../hooks/useChat'
 
-function MarkdownMessage({ content }) {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        h1: ({ children }) => <h1 className="mb-3 text-xl font-bold">{children}</h1>,
-        h2: ({ children }) => <h2 className="mb-3 text-lg font-bold">{children}</h2>,
-        h3: ({ children }) => <h3 className="mb-2 text-base font-semibold">{children}</h3>,
-        p: ({ children }) => <p className="mb-3 last:mb-0 whitespace-pre-wrap">{children}</p>,
-        ul: ({ children }) => <ul className="mb-3 list-disc pl-5">{children}</ul>,
-        ol: ({ children }) => <ol className="mb-3 list-decimal pl-5">{children}</ol>,
-        li: ({ children }) => <li className="mb-1">{children}</li>,
-        a: ({ href, children }) => (
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-cyan-300 underline underline-offset-2"
-          >
-            {children}
-          </a>
-        ),
-        blockquote: ({ children }) => (
-          <blockquote className="mb-3 border-l-2 border-slate-500 pl-4 italic text-slate-300">
-            {children}
-          </blockquote>
-        ),
-        pre: ({ children }) => (
-          <pre className="mb-3 overflow-x-auto rounded-2xl bg-slate-950/90 p-4 text-xs">
-            {children}
-          </pre>
-        ),
-        code: ({ inline, children }) =>
-          inline ? (
-            <code className="rounded bg-slate-950/80 px-1.5 py-0.5 text-xs text-cyan-200">
-              {children}
-            </code>
-          ) : (
-            <code className="text-slate-100">{children}</code>
-          ),
-        hr: () => <hr className="my-4 border-slate-700" />,
-      }}
-    >
-      {content || ""}
-    </ReactMarkdown>
-  );
-}
 
-function Dashboard() {
-  const dispatch = useDispatch();
-  const { handelSendMessage } = useChat();
-  const { chats, currentChatId, isLoading, error } = useSelector(
-    (state) => state.chat
-  );
-  const { user } = useSelector((state) => state.auth);
-  const [message, setMessage] = useState("");
+const Dashboard = () => {
+  const chat = useChat()
+  const [ chatInput, setChatInput ] = useState('')
+  const chats = useSelector((state) => state.chat.chats)
+  const currentChatId = useSelector((state) => state.chat.currentChatId)
 
-  // Convert chats object into an array for rendering.
-  // We sort by lastUpdated so the latest active chat appears first.
-  const chatList = Object.values(chats || {}).sort((a, b) => {
-    return new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0);
-  });
+  useEffect(() => {
+    chat.initializeSocketConnection()
+    chat.handleGetChats()
+  }, [])
 
-  // If a chat is selected, show it.
-  // Otherwise show the latest chat as default.
-  const activeChat = chats?.[currentChatId] || chatList[0] || null;
-  const selectedChatId = currentChatId || activeChat?.id;
+  const handleSubmitMessage = (event) => {
+    event.preventDefault()
 
-  async function handleSubmit(event) {
-    event.preventDefault();
+    const trimmedMessage = chatInput.trim()
+    if (!trimmedMessage) {
+      return
+    }
 
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) return;
+    chat.handleSendMessage({ message: trimmedMessage, chatId: currentChatId })
+    setChatInput('')
+  }
 
-    // Pass the current chat id for follow-up messages.
-    // If there is no active chat yet, backend will create a new one.
-    await handelSendMessage({
-      message: trimmedMessage,
-      chatId: activeChat?.id || null,
-    });
-
-    // Clear input after send for better UX.
-    setMessage("");
+  const openChat = (chatId) => {
+    chat.handleOpenChat(chatId)
   }
 
   return (
-    <section className="chat-dashboard min-h-screen bg-slate-950 px-4 py-6 text-slate-100">
-      <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-7xl gap-4 lg:grid-cols-[280px_1fr]">
-        <aside className="rounded-3xl border border-slate-800 bg-slate-900/70 p-4 backdrop-blur">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-cyan-400">
-              Dashboard
-            </p>
-            <h1 className="mt-2 text-2xl font-bold">
-              {user?.username ? `${user.username}'s Chat` : "Simple Chat"}
-            </h1>
-          </div>
+    <main className='min-h-screen w-full bg-[#07090f] p-3 text-white md:p-5'>
+      <section className='mx-auto flex h-[calc(100vh-1.5rem)] w-full flex-col gap-4 rounded-3xl p-1 md:h-[calc(100vh-2.5rem)] md:flex-row md:gap-6'>
+        <aside className='w-full shrink-0 rounded-3xl border border-white/10 bg-[#080b12] p-4 md:h-full md:w-72 md:flex md:flex-col overflow-auto'>
+          <h1 className='mb-4 text-2xl font-semibold tracking-tight md:mb-5 md:text-3xl'>Perplexity</h1>
 
-          <button
-            type="button"
-            onClick={() => dispatch(setCurrentChatId(null))}
-            className="mb-4 w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400"
-          >
-            New Chat
-          </button>
-
-          <div className="dashboard-scrollbar max-h-[70vh] space-y-2 overflow-y-auto pr-1">
-            {chatList.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-700 p-4 text-sm text-slate-400">
-                No chats yet. Send your first message.
-              </div>
-            ) : (
-              chatList.map((chat) => (
-                <button
-                  key={chat.id}
-                  type="button"
-                  onClick={() => dispatch(setCurrentChatId(chat.id))}
-                  className={`w-full rounded-2xl border p-3 text-left transition ${
-                    selectedChatId === chat.id
-                      ? "border-cyan-400 bg-slate-800"
-                      : "border-slate-800 bg-slate-950/60 hover:border-slate-600"
-                  }`}
-                >
-                  <p className="truncate font-semibold">
-                    {chat.title || "New Chat"}
-                  </p>
-                  <p className="mt-1 truncate text-sm text-slate-400">
-                    {chat.messages?.[chat.messages.length - 1]?.content ||
-                      "No messages"}
-                  </p>
-                </button>
-              ))
-            )}
+          <div className='flex gap-2 overflow-x-auto pb-1 md:block md:space-y-2 md:overflow-visible'>
+            {Object.values(chats).map((chat,index) => (
+              <button
+                onClick={()=>{openChat(chat.id)}}
+                key={index}
+                type='button'
+                className='min-w-40 cursor-pointer rounded-xl border border-white/60 bg-transparent px-3 py-2 text-left text-sm font-medium text-white/90 transition hover:border-white hover:text-white md:w-full md:min-w-0 md:text-base'
+              >
+                {chat.title}
+              </button>
+            ))}
           </div>
         </aside>
 
-        <main className="flex min-h-[75vh] flex-col rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur">
-          <div className="border-b border-slate-800 px-6 py-4">
-            <h2 className="text-xl font-semibold">
-              {activeChat?.title || "Start a new chat"}
-            </h2>
-            <p className="mt-1 text-sm text-slate-400">
-              Send a message and the reply will appear here.
-            </p>
-          </div>
+        <section className='relative mx-auto flex h-full min-w-0 flex-1 flex-col gap-4'>
 
-          <div className="dashboard-scrollbar flex-1 space-y-4 overflow-y-auto px-6 py-5">
-            {error ? (
-              <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                {error}
-              </div>
-            ) : null}
-
-            {!activeChat?.messages?.length ? (
-              <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 p-8 text-center text-slate-400">
-                Type a message below to create a chat.
-              </div>
-            ) : (
-              activeChat.messages.map((item, index) => (
-                <div
-                  key={item._id || `${item.role}-${index}`}
-                  className={`message-enter flex ${
-                    item.role === "user" ? "justify-end" : "justify-start"
+          <div className='messages flex-1 space-y-3 overflow-y-auto pr-1 pb-30'>
+            {chats[ currentChatId ]?.messages.map((message) => (
+              <div
+                key={message.id}
+                className={`max-w-[82%] w-fit rounded-2xl px-4 py-3 text-sm md:text-base ${message.role === 'user'
+                    ? 'ml-auto rounded-br-none bg-white/12 text-white'
+                    : 'mr-auto border border-white/25 bg-[#0f1626] text-white/90'
                   }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-3xl px-4 py-3 text-sm leading-7 shadow-lg ${
-                      item.role === "user"
-                        ? "bg-cyan-500 text-slate-950"
-                        : "chat-display bg-slate-800 text-slate-100"
-                    }`}
+              >
+                {message.role === 'user' ? (
+                  <p>{message.content}</p>
+                ) : (
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <p className='mb-2 last:mb-0'>{children}</p>,
+                      ul: ({ children }) => <ul className='mb-2 list-disc pl-5'>{children}</ul>,
+                      ol: ({ children }) => <ol className='mb-2 list-decimal pl-5'>{children}</ol>,
+                      code: ({ children }) => <code className='rounded bg-white/10 px-1 py-0.5'>{children}</code>,
+                      pre: ({ children }) => <pre className='mb-2 overflow-x-auto rounded-xl bg-black/30 p-3'>{children}</pre>
+                    }}
                   >
-                    {item.role === "ai" ? (
-                      <MarkdownMessage content={item.content} />
-                    ) : (
-                      item.content
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-
-            {isLoading ? (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-3xl bg-slate-800 px-4 py-3">
-                  <span className="typing-dot h-2 w-2 rounded-full bg-cyan-400" />
-                  <span
-                    className="typing-dot h-2 w-2 rounded-full bg-cyan-400"
-                    style={{ animationDelay: "0.15s" }}
-                  />
-                  <span
-                    className="typing-dot h-2 w-2 rounded-full bg-cyan-400"
-                    style={{ animationDelay: "0.3s" }}
-                  />
-                </div>
+                    {message.content}
+                  </ReactMarkdown>
+                )}
               </div>
-            ) : null}
+            ))}
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="border-t border-slate-800 p-4"
-          >
-            <div className="flex flex-col gap-3 md:flex-row">
-              <textarea
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                placeholder="Ask anything..."
-                rows={3}
-                className="min-h-[88px] flex-1 resize-none rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 outline-none transition focus:border-cyan-400"
+          <footer className='rounded-3xl w-full absolute bottom-2 border border-white/60 bg-[#080b12] p-4 md:p-5'>
+            <form onSubmit={handleSubmitMessage} className='flex flex-col gap-3 md:flex-row'>
+              <input
+                type='text'
+                value={chatInput}
+                onChange={(event) => setChatInput(event.target.value)}
+                placeholder='Type your message...'
+                className='w-full rounded-2xl border border-white/50 bg-transparent px-4 py-3 text-lg text-white outline-none transition placeholder:text-white/45 focus:border-white/90'
               />
               <button
-                type="submit"
-                disabled={isLoading || !message.trim()}
-                className="rounded-2xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                type='submit'
+                disabled={!chatInput.trim()}
+                className='rounded-2xl border border-white/60 px-6 py-3 text-lg font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50'
               >
-                {isLoading ? "Sending..." : "Send Message"}
+                Send
               </button>
-            </div>
-          </form>
-        </main>
-      </div>
-    </section>
-  );
+            </form>
+          </footer>
+        </section>
+      </section>
+    </main>
+  )
 }
 
-export default Dashboard;
+export default Dashboard
