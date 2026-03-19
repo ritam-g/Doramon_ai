@@ -48,7 +48,7 @@ export async function sendMessageController(req, res) {
       .select("role content")
       .lean();
 
-    console.log("✅ DB Messages count:", dbMessages.length, dbMessages);
+    // console.log("✅ DB Messages count:", dbMessages.length, dbMessages);
 
     if (dbMessages.length === 0) {
       throw new Error("No messages found after save");
@@ -79,8 +79,9 @@ export async function sendMessageController(req, res) {
     res.status(200).json({
       success: true,
       chatId: activeChatId,
-      userMessage,
       aiMessage,
+      chat,
+      userMessage,
     });
 
   } catch (error) {
