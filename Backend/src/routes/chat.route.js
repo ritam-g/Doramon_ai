@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authVerifyMiddleware } from "../middleware/auth.middleware.js";
 import { messageValidation } from "../middleware/validation.js";
 import { chatDeleteController, getChatControlelr, getMessageController, sendMessageController } from "../controller/chat.controller.js";
+import upload from "../middleware/uplode.middleware.js";
 
 const chatRouter = Router();
 
@@ -11,7 +12,7 @@ const chatRouter = Router();
  * @route - protected
  * @access - Private
  */
-chatRouter.post("/message", messageValidation, authVerifyMiddleware, sendMessageController)
+chatRouter.post("/message", upload.single('file'), messageValidation, authVerifyMiddleware, sendMessageController)
 /** 
  * @description - user can get message but he should login first
  * @method - get method

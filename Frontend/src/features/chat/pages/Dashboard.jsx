@@ -19,6 +19,7 @@ const Dashboard = () => {
   const chat = useChat();
   const dispatch = useDispatch();
   const [chatInput, setChatInput] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   
   const chats = useSelector((state) => state.chat.chats);
@@ -42,16 +43,17 @@ const Dashboard = () => {
   // AUTO-SUBMIT on Voice Finish
   useEffect(() => {
     if (prevListeningRef.current === true && listening === false) {
-      const finalMessage = transcript.trim() || chatInput.trim();
+      const finalMessage = transcript.trim() || chatInput.trim() || (selectedFile ? "Summarize this file" : "");
       if (finalMessage) {
-        chat.handleSendMessage({ message: finalMessage, chatId: currentChatId });
+        chat.handleSendMessage({ message: finalMessage, chatId: currentChatId, file: selectedFile });
         setChatInput('');
+        setSelectedFile(null);
         // Let Redux know we consumed this transcript
         dispatch({ type: 'voice/setTranscript', payload: '' });
       }
     }
     prevListeningRef.current = listening;
-  }, [listening, transcript, chatInput, currentChatId, chat, dispatch]);
+  }, [listening, transcript, chatInput, selectedFile, currentChatId, chat, dispatch]);
 
   // ===== API Data Handling =====
   useEffect(() => {
@@ -80,14 +82,21 @@ const Dashboard = () => {
   const handleSubmitMessage = (event) => {
     if (event) event.preventDefault();
 
-    const trimmedMessage = chatInput.trim();
-    if (!trimmedMessage) {
+    let trimmedMessage = chatInput.trim();
+    
+    // Auto-ask to summarize if a file is present but no message is typed.
+    if (!trimmedMessage && selectedFile) {
+        trimmedMessage = "Summarize this file";
+    }
+
+    if (!trimmedMessage && !selectedFile) {
       return;
     }
 
     // User sends message -> API -> Redux update -> UI re-render
-    chat.handleSendMessage({ message: trimmedMessage, chatId: currentChatId });
+    chat.handleSendMessage({ message: trimmedMessage, chatId: currentChatId, file: selectedFile });
     setChatInput('');
+    setSelectedFile(null);
   };
 
   const handleOpenChat = (chatId) => {
@@ -258,9 +267,12 @@ const Dashboard = () => {
                     chatInput={chatInput}
                     onChange={(event) => setChatInput(event.target.value)}
                     onSubmit={handleSubmitMessage}
-                    disabled={!chatInput.trim()}
+                    disabled={!chatInput.trim() && !selectedFile}
                     onMicClick={() => toggleListening(listening)}
                     isListening={listening}
+                    onFileSelect={setSelectedFile}
+                    selectedFile={selectedFile}
+                    onClearFile={() => setSelectedFile(null)}
                   />
                 </div>
               </div>

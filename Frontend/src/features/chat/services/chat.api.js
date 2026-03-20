@@ -13,7 +13,18 @@ const api = axios.create({
  * @route POST /api/chats/message
  * @access private
  */
-export async function sendMessage({ message, chatId }) {
+export async function sendMessage({ message, chatId, file }) {
+    // 👉 If there is a file attached, use FormData so multer can handle it
+    if (file) {
+        const formData = new FormData();
+        formData.append('message', message);
+        if (chatId) formData.append('chatId', chatId);
+        formData.append('file', file);
+        
+        const { data } = await api.post('/message', formData);
+        return data;
+    }
+
     // 👉 `chatId` is optional: no id means "start a new chat" on the backend.
     const { data } = await api.post('/message', { message, chatId })
     return data

@@ -6,13 +6,15 @@ const upload = multer(
         limits: {
             fileSize: 5 * 1024 * 1024
         },
-        //NOTE - restrict uploads to PDF only for resume parsing flow.
+        //NOTE - allow PDF, Image, and TXT files for the new chat file flow
         fileFilter: (req, file, cb) => {
-            if (file.mimetype !== "application/pdf") {
-                return cb(new Error("only pdf files are allowed"))
+            const allowedMimetypes = ["application/pdf", "text/plain"];
+            
+            if (allowedMimetypes.includes(file.mimetype) || file.mimetype.startsWith("image/")) {
+                cb(null, true);
+            } else {
+                return cb(new Error("Only PDF, TXT, and Image files are allowed"));
             }
-            //REVIEW - if some clients send `application/octet-stream`, add extension checks as fallback.
-            cb(null, true)
         }
     }
 )

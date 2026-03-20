@@ -57,6 +57,15 @@ export async function sendMessageController(req, res) {
     /* =============================
        SEND TO AI
     ============================== */
+    const { extractTextFromFile } = await import("../utils/extractText.js");
+
+    if (req.file) {
+      const fileText = await extractTextFromFile(req.file);
+      const lastMsg = dbMessages[dbMessages.length - 1];
+      
+      // Inject extracted text so AI can query it
+      lastMsg.content = `File Content:\n${fileText}\n\nUser Question:\n${lastMsg.content}`;
+    }
 
     const aiResponse = await chatWithMistralAiModel({
       message: dbMessages,

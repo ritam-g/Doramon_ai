@@ -33,7 +33,7 @@ export function useChat() {
     }
 
     // ===== Send Message Flow =====
-    async function handleSendMessage({ message, chatId }) {
+    async function handleSendMessage({ message, chatId, file }) {
         try {
             dispatch(setLoading(true));
 
@@ -41,7 +41,7 @@ export function useChat() {
             // 1. Send user input to backend
             // 2. Backend returns chat metadata + user/AI messages
             // 3. Redux stores both messages so UI re-renders immediately
-            const { chatId: activeChatId, chat, userMessage, aiMessage } = await sendMessage({ message, chatId });
+            const { chatId: activeChatId, chat, userMessage, aiMessage } = await sendMessage({ message, chatId, file });
             //! added new message as id
             dispatch(createNewChat({
                 chatId: activeChatId,

@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { PaperclipIcon } from "../icons";
 
-const FileUploadButton = () => {
+const FileUploadButton = ({ onFileSelect }) => {
   const fileInputRef = useRef(null);
 
   const handleClick = () => {
@@ -10,10 +10,11 @@ const FileUploadButton = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      console.log("Selected file:", file);
-      // 👉 you can upload file here
+    if (file && onFileSelect) {
+      onFileSelect(file);
     }
+    // Clear the input so selecting the same file again works
+    e.target.value = null;
   };
 
   return (
@@ -33,6 +34,7 @@ const FileUploadButton = () => {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
+        accept=".pdf,.txt,image/*"
         className="hidden"
       />
     </div>
