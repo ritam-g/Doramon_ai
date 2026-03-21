@@ -78,7 +78,15 @@ export function useChat() {
             }));
 
             // 4. Emit via socket
-            socket.emit("ask", { message, chatId: activeChatId, file });
+            socket.emit("ask", { 
+                message, 
+                chatId: activeChatId, 
+                file: file ? {
+                    buffer: file, // Socket.io handles File/Blob by converting to Buffer on server
+                    originalname: file.name,
+                    mimetype: file.type
+                } : null
+            });
 
             const onStream = (chunk) => {
                 dispatch(appendToMessage({

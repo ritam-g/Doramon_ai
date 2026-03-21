@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import chatModel from "../models/chat.model.js"
 import messageModel from "../models/message.model.js"
 import { chatWithMistralAiModel, messageTitleGenerator } from "../services/ai.service.js"
+import { extractTextFromFile } from "../utils/extractText.js";
 import 'dotenv/config'
 
 let io
@@ -53,9 +54,23 @@ export function initSocket(httpServer) {
                     activeChatId = chat._id.toString();
                 }
 
+                let text = "";
+                if (file) {
+                    try {
+                        text = await extractTextFromFile(file);
+                    } catch (extractionError) {
+                        console.error("Text extraction failed:", extractionError);
+                        // We can still proceed without file text, or send an error back.
+                        // For now, let's inform the user but continue.
+                        text = `[Error extracting text from ${file.originalname || "file"}]`;
+                    }
+                }
+
+                const finalUserMessage = text ? `Extracted file content:\n${text}\n\nUser question: ${message}` : message;
+
                 await messageModel.create({
                     chat: activeChatId,
-                    content: message,
+                    content: finalUserMessage,
                     role: "user",
                 });
 
