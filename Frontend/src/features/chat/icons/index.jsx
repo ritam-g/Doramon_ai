@@ -1,10 +1,13 @@
 import React from 'react';
 
-export function BotIcon() {
+export function BotIcon({ size = 'md' }) {
+  const sizeClass = size === 'lg' ? 'h-10 w-10' : size === 'sm' ? 'h-7 w-7' : 'h-9 w-9';
   return (
-    <svg viewBox='0 0 24 24' aria-hidden='true' className='h-5 w-5 cursor-pointer'>
-      <path d='M9 4h6M12 4V2M7 9h10a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2Zm3 4h.01M14 13h.01M9 19v2M15 19v2M3 12H1M23 12h-2' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round' />
-    </svg>
+    <img
+      src='/Images/botIcon-real.png'
+      alt='Doraemon'
+      className={`${sizeClass} rounded-xl object-cover drop-shadow-[0_2px_8px_rgba(56,189,248,0.45)]`}
+    />
   )
 }
 

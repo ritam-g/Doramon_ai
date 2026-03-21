@@ -34,14 +34,14 @@ export function ChatMessage({ message, copiedMessageId, onCopy }) {
       className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       {!isUser && (
-        <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-teal-400/20 bg-teal-400/10 text-teal-200'>
-          <BotIcon />
+        <div className='shrink-0 self-start pt-1'>
+          <BotIcon size='md' />
         </div>
       )}
 
       <div className={`max-w-[88%] md:max-w-[78%] ${isUser ? 'order-first' : ''}`}>
         <div className={`mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 ${isUser ? 'justify-end' : 'justify-start'}`}>
-          <span>{isUser ? 'You' : 'Nova Assistant'}</span>
+          <span>{isUser ? 'You' : 'Doraemon'}</span>
         </div>
 
         <div

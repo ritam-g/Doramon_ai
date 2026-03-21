@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentChatId } from '../../../app/store/features/chat.slice';
 import { useChat } from '../hooks/useChat.js';
-import { useSpeechRecognition } from '../../../features/voice/useSpeechRecognition';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 // Components
 import { SidebarChatItem } from '../components/SidebarChatItem';
@@ -72,7 +72,7 @@ const Dashboard = () => {
   }, [chats]);
 
   const activeMessages = chats[currentChatId]?.messages || [];
-  const activeTitle = chats[currentChatId]?.title || 'Nova AI';
+  const activeTitle = chats[currentChatId]?.title || 'Doraemon';
 
   // 👉 Scroll after message changes so the latest response stays visible above the composer.
   useEffect(() => {
@@ -189,8 +189,8 @@ const Dashboard = () => {
                 <div className="flex items-center gap-3 min-w-0">
 
                   {/* Bot Icon */}
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 text-white shadow-md shrink-0">
-                    <BotIcon />
+                  <div className="shrink-0">
+                    <BotIcon size='lg' />
                   </div>
 
                   {/* Title */}
@@ -200,7 +200,7 @@ const Dashboard = () => {
                         {activeTitle}
                       </h1>
                       <span className="hidden md:inline text-xs text-slate-400">
-                        GPT-4 Turbo
+                        Doraemon AI · Friends Forever
                       </span>
                     </div>
                   </div>
