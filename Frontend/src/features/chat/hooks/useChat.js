@@ -5,9 +5,10 @@ import {
     createNewChat,
     addMessage,
     setChats,
+    appendToMessage,
 } from "../../../app/store/features/chat.slice";
-import { sendMessage, getChat, getMessage } from "../services/chat.api";
-import { initializedSocketConnection } from "../services/chat.socket";
+import { getChat, getMessage } from "../services/chat.api";
+import { initializedSocketConnection, getSocket } from "../services/chat.socket";
 import { useDispatch, useSelector } from "react-redux";
 
 // ===== Message Normalization =====
@@ -37,35 +38,63 @@ export function useChat() {
         try {
             dispatch(setLoading(true));
 
-            // Flow:
-            // 1. Send user input to backend
-            // 2. Backend returns chat metadata + user/AI messages
-            // 3. Redux stores both messages so UI re-renders immediately
-            const { chatId: activeChatId, chat, userMessage, aiMessage } = await sendMessage({ message, chatId, file });
-            //! added new message as id
-            dispatch(createNewChat({
-                chatId: activeChatId,
-                title: chat?.title || chats[activeChatId]?.title || "New Chat",
-            }));
-            //! in that new messageid we are adding meesage of user
+            const socket = getSocket();
+            if (!socket) throw new Error("Socket not initialized");
+
+            const activeChatId = chatId || `temp_${Date.now()}`;
+
+            // 1. Dispatch new chat if not exists
+            if (!chatId) {
+                dispatch(createNewChat({
+                    chatId: activeChatId,
+                    title: message.substring(0, 20) || "New Chat",
+                }));
+                dispatch(setCurrentChatId(activeChatId));
+            }
+
+            // 2. Add user message
             dispatch(addMessage({
                 chatId: activeChatId,
-                message: userMessage?.content || message,
+                message: message,
                 role: "user",
-                messageId: userMessage?._id,
+                messageId: `user_${Date.now()}`,
             }));
-            //! in that new messageid we are adding meesage of ai
+
+            // 3. Add empty ai message for streaming
             dispatch(addMessage({
                 chatId: activeChatId,
-                message: aiMessage?.content || "",
+                message: "",
                 role: "ai",
-                messageId: aiMessage?._id,
+                messageId: `ai_${Date.now()}`,
             }));
-            //! now setting current caht id is active id  
-            dispatch(setCurrentChatId(activeChatId));
+
+            // 4. Emit via socket
+            socket.emit("ask", { message, chatId: activeChatId, file });
+
+            const onStream = (chunk) => {
+                dispatch(appendToMessage({
+                    chatId: activeChatId,
+                    chunk
+                }));
+            };
+
+            const onDone = (payload) => {
+                socket.off("stream", onStream);
+                socket.off("done", onDone);
+                dispatch(setLoading(false));
+                
+                // If this was a new chat, updating ID safely via getChats
+                if (!chatId && payload?.chatId) {
+                    dispatch(setCurrentChatId(payload.chatId));
+                    handleGetChats();
+                }
+            };
+
+            socket.on("stream", onStream);
+            socket.on("done", onDone);
+
         } catch (error) {
             dispatch(setError(error.message));
-        } finally {
             dispatch(setLoading(false));
         }
     }

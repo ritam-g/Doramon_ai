@@ -52,6 +52,12 @@ export function ChatMessage({ message, copiedMessageId, onCopy }) {
         >
           {isUser ? (
             <p className='whitespace-pre-wrap'>{message.content}</p>
+          ) : !message.content ? (
+            <div className='flex h-[1.5rem] w-8 items-center justify-center gap-1.5'>
+              <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce [animation-delay:-0.3s]' />
+              <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce [animation-delay:-0.15s]' />
+              <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce' />
+            </div>
           ) : (
             <ReactMarkdown
               components={{

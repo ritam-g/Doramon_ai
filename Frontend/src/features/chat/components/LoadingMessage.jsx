@@ -16,13 +16,12 @@ export function LoadingMessage() {
         <div className='mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500'>
           Nova Assistant
         </div>
-        <div className='rounded-[28px] rounded-tl-md border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(9,12,24,0.98))] px-5 py-5 text-slate-300 shadow-[0_24px_60px_-34px_rgba(2,6,23,1)]'>
-          <div className='mb-3 flex items-center gap-2'>
-            <span className='typing-dot h-2.5 w-2.5 rounded-full bg-teal-300 [animation-delay:0ms]' />
-            <span className='typing-dot h-2.5 w-2.5 rounded-full bg-emerald-300 [animation-delay:150ms]' />
-            <span className='typing-dot h-2.5 w-2.5 rounded-full bg-cyan-300 [animation-delay:300ms]' />
+        <div className='flex h-12 w-20 items-center justify-center rounded-[28px] rounded-tl-md border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(9,12,24,0.98))] shadow-[0_24px_60px_-34px_rgba(2,6,23,1)]'>
+          <div className='flex items-center gap-1.5'>
+            <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce [animation-delay:-0.3s]' />
+            <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce [animation-delay:-0.15s]' />
+            <span className='h-2 w-2 rounded-full bg-teal-400/80 animate-bounce' />
           </div>
-          <p className='text-sm text-slate-400'>Thinking...</p>
         </div>
       </div>
     </motion.article>

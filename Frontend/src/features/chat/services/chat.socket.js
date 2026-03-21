@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client'
+let socket;
 export function initializedSocketConnection() {
-    const socket =io("http://localhost:5000",{
+    socket = io("http://localhost:5000",{
         withCredentials: true
     })
 
@@ -8,3 +9,4 @@ export function initializedSocketConnection() {
         console.log("Connected to the server");
     });
 }
+export function getSocket() { return socket; }

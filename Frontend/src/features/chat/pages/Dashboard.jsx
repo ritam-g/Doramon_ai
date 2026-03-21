@@ -256,7 +256,7 @@ const Dashboard = () => {
                     />
                   ))}
 
-                  {isLoading && <LoadingMessage />}
+                  {isLoading && activeMessages.length === 0 && <LoadingMessage />}
                   <div ref={messagesEndRef} />
                 </div>
               </div>
