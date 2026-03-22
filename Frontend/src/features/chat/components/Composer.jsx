@@ -39,10 +39,10 @@ export const Composer = React.memo(({ chatInput, onChange, onSubmit, disabled, o
           </div>
         )}
 
-        <div className={`p-2 rounded-2xl border transition-all duration-500 flex items-center gap-2 relative z-10 ${
+        <div className={`p-2 rounded-2xl border transition-all duration-700 flex items-center gap-2 relative z-10 ${
           isLoading 
-            ? 'bg-transparent border-transparent shadow-none opacity-20 pointer-events-none' 
-            : 'glass-panel border-outline-variant/10 shadow-2xl focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(138,235,255,0.12)] focus-within:bg-surface-container-high/60'
+            ? 'bg-transparent border-transparent shadow-none opacity-0 translate-y-12 scale-95 pointer-events-none' 
+            : 'glass-panel border-outline-variant/10 shadow-2xl opacity-100 translate-y-0 scale-100 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(138,235,255,0.12)] focus-within:bg-surface-container-high/60'
         }`}>
           <FileUploadButton onFileSelect={onFileSelect} />
           

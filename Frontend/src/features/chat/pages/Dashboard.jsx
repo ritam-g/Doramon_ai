@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentChatId } from '../../../app/store/features/chat.slice';
 import { useChat } from '../hooks/useChat.js';
@@ -236,7 +237,9 @@ const Dashboard = () => {
         {/* Bottom Floating Input Shell */}
         <div className="fixed bottom-0 right-0 left-0 md:left-64 p-8 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none">
           <div className="max-w-4xl mx-auto pointer-events-auto flex flex-col gap-4">
-             {isLoading && <LoadingMessage />}
+             <AnimatePresence>
+                {isLoading && <LoadingMessage key="loading-msg" />}
+             </AnimatePresence>
              <Composer
                 chatInput={chatInput}
                 showSuggestions={activeMessages.length === 0}
