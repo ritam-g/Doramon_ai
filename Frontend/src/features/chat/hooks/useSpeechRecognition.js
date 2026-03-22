@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { setTranscript, setListening, setError, resetVoice } from '../../voice/voiceSlice';
+import { setTranscript, setListening, setError, resetVoice } from '../../../app/store/features/voice.slice.js';
 
 /**
  * Custom hook for Web Speech API with proper lifecycle, error handling,

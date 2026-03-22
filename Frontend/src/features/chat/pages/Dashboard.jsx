@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentChatId } from '../../../app/store/features/chat.slice';
 import { useChat } from '../hooks/useChat.js';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { setTranscript } from '../../../app/store/features/voice.slice.js';
 
 // Components
 import { SidebarChatItem } from '../components/SidebarChatItem';
@@ -49,7 +50,7 @@ const Dashboard = () => {
         chat.handleSendMessage({ message: finalMessage, chatId: currentChatId, file: selectedFile });
         setChatInput('');
         setSelectedFile(null);
-        dispatch({ type: 'voice/setTranscript', payload: '' });
+        dispatch(setTranscript(''));
       }
     }
     prevListeningRef.current = listening;

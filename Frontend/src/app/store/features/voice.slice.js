@@ -33,4 +33,3 @@ const voiceSlice = createSlice({
 
 export const { setTranscript, setListening, setError, resetVoice } = voiceSlice.actions;
 export default voiceSlice.reducer;
-
