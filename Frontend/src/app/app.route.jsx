@@ -5,6 +5,7 @@ import { ProtectedRoute, PageLoader } from './route-utils'
 // Lazy loaded pages
 const LandingPage = React.lazy(() => import('../features/landing/pages/LandingPage'))
 const Dashboard = React.lazy(() => import('../features/chat/pages/Dashboard'))
+const ProfilePage = React.lazy(() => import('../features/profile/pages/ProfilePage'))
 const Login = React.lazy(() => import('../features/auth/pages/Login'))
 const Register = React.lazy(() => import('../features/auth/pages/Register'))
 
@@ -33,6 +34,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<PageLoader />}>
             <ProtectedRoute>
                 <Dashboard />
+            </ProtectedRoute>
+          </Suspense>
+        )
+    },
+    {
+        path: '/profile',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProtectedRoute>
+                <ProfilePage />
             </ProtectedRoute>
           </Suspense>
         )

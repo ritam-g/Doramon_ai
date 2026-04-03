@@ -20,3 +20,8 @@ export async function GetMeApi() {
     return data
 }
 
+export async function logoutApi() {
+    const { data } = await api.post('/logout')
+    return data
+}
+

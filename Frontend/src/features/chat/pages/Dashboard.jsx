@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
 import { setCurrentChatId } from '../../../app/store/features/chat.slice';
 import { useChat } from '../hooks/useChat.js';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { setTranscript } from '../../../app/store/features/voice.slice.js';
+import { useAuth } from '../../auth/hook/useAuth';
+import { UserDropdown } from '../../profile/components/UserDropdown';
 
 // Components
 import { SidebarChatItem } from '../components/SidebarChatItem';
@@ -20,6 +23,8 @@ const AUTO_SCROLL_THRESHOLD = 56;
 const Dashboard = () => {
   const chat = useChat();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { handleLogout } = useAuth();
   const [chatInput, setChatInput] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [copiedMessageId, setCopiedMessageId] = useState(null);
@@ -29,6 +34,7 @@ const Dashboard = () => {
   const currentChatId = useSelector((state) => state.chat.currentChatId);
   const isLoading = useSelector((state) => state.chat.isLoading);
   const chatError = useSelector((state) => state.chat.error);
+  const user = useSelector((state) => state.auth.user);
   
   const { transcript, listening } = useSelector((state) => state.voice);
   const { stopListening, toggleListening } = useSpeechRecognition();
@@ -270,6 +276,19 @@ const Dashboard = () => {
     setChatInput('');
   }, [dispatch]);
 
+  const handleOpenProfile = useCallback(() => {
+    navigate('/profile');
+  }, [navigate]);
+
+  const handleOpenSettings = useCallback(() => {
+    navigate('/profile');
+  }, [navigate]);
+
+  const handleLogoutAction = useCallback(async () => {
+    await handleLogout();
+    navigate('/login');
+  }, [handleLogout, navigate]);
+
   const handleCopyMessage = useCallback(async (message) => {
     try {
       await navigator.clipboard.writeText(message.content);
@@ -347,16 +366,24 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
-
-
-        <div className="pt-2 border-t border-outline-variant/10 flex flex-col gap-1">
-          <button className="text-slate-400 px-4 py-2.5 hover:bg-surface-container rounded-xl flex items-center gap-3 text-sm transition-all hover:text-on-surface">
-            <span className="material-symbols-outlined text-lg">help</span> Help & Support
+        <div className="pt-3 border-t border-outline-variant/10 space-y-3">
+          <button
+            type="button"
+            onClick={handleOpenProfile}
+            className="w-full rounded-2xl border border-white/5 bg-surface-container-low px-4 py-3 text-left text-sm font-semibold text-slate-300 transition duration-300 hover:border-primary/20 hover:bg-surface-container-high hover:text-primary"
+          >
+            <span className="inline-flex items-center gap-3">
+              <span className="material-symbols-outlined text-lg">manage_accounts</span>
+              Profile Settings
+            </span>
           </button>
-          <button className="text-slate-400 px-4 py-2.5 hover:bg-rose-500/10 hover:text-rose-400 rounded-xl flex items-center gap-3 text-sm transition-all">
-            <span className="material-symbols-outlined text-lg">logout</span> Sign Out
-          </button>
+
+          <UserDropdown
+            user={user}
+            onProfile={handleOpenProfile}
+            onSettings={handleOpenSettings}
+            onLogout={handleLogoutAction}
+          />
         </div>
       </aside>
 
@@ -381,14 +408,20 @@ const Dashboard = () => {
             <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-surface-container-low rounded-full border border-white/5 shadow-inner">
                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Latency: 24ms</span>
             </div>
-            <div className="flex gap-1">
-              <button className="p-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-surface-container-highest transition-all active:scale-90">
-                <span className="material-symbols-outlined">share</span>
-              </button>
-              <button className="p-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-surface-container-highest transition-all active:scale-90">
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              className="p-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-surface-container-highest transition-all active:scale-90"
+              aria-label="Notifications"
+            >
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <UserDropdown
+              compact
+              user={user}
+              onProfile={handleOpenProfile}
+              onSettings={handleOpenSettings}
+              onLogout={handleLogoutAction}
+            />
           </div>
         </header>
 

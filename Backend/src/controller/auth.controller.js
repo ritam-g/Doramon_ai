@@ -181,9 +181,12 @@ export async function userLoginController(req, res, next) {
             success: true,
             message: 'Login successful',
             user: {
+                id: user._id,
+                fullName: user.username,
                 username: user.username,
                 email: user.email,
-
+                createdAt: user.createdAt,
+                verified: user.verified,
             }
         })
     } catch (err) {
@@ -214,8 +217,12 @@ export async function getMeUserController(req, res, next) {
             success: true,
             message: 'User found',
             user: {
+                id: user._id,
+                fullName: user.username,
                 username: user.username,
                 email: user.email,
+                createdAt: user.createdAt,
+                verified: user.verified,
             }
         })
     } catch (err) {
@@ -224,5 +231,21 @@ export async function getMeUserController(req, res, next) {
             success: false,
             message: 'Server error during get me'
         });
+    }
+}
+
+export async function logoutController(req, res) {
+    try {
+        res.clearCookie('token')
+        return res.status(200).json({
+            success: true,
+            message: 'Logout successful'
+        })
+    } catch (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Server error during logout'
+        })
     }
 }
