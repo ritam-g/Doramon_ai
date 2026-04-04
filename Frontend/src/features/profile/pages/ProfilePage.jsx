@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { setCurrentChatId } from '../../../app/store/features/chat.slice';
-import { setUser } from '../../../app/store/features/auth.slice';
 import { useAuth } from '../../auth/hook/useAuth';
 import { formatRelativeTime } from '../../chat/utils/formatters';
 import { ProfileHeader } from '../components/ProfileHeader';
@@ -12,8 +11,20 @@ import { ActivityCard } from '../components/ActivityCard';
 import { UserDropdown } from '../components/UserDropdown';
 import { BotIcon } from '../../chat/icons';
 
+// Simple client-side email check so we can give fast feedback before the API call.
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Build a readable display name from the available user fields.
+ *
+ * Priority:
+ * 1. fullName from frontend state
+ * 2. name from backend-normalized data
+ * 3. username fallback
+ */
 function toDisplayName(user) {
   if (user?.fullName?.trim()) return user.fullName.trim();
+  if (user?.name?.trim()) return user.name.trim();
   if (!user?.username) return 'Neural Operator';
 
   return user.username
@@ -34,10 +45,28 @@ function formatJoinedDate(value) {
   })}`;
 }
 
+function normalizeNameValue(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeEmailValue(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+/**
+ * Profile page
+ *
+ * Main responsibilities:
+ * - Read the current user from Redux
+ * - Pre-fill the profile form with existing data
+ * - Let the user update name and email
+ * - Call the backend profile API through the existing auth hook
+ * - Show clear success/error/loading states
+ */
 export default function ProfilePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { handleLogout } = useAuth();
+  const { handleLogout, handleUpdateProfile } = useAuth();
 
   const user = useSelector((state) => state.auth.user);
   const chats = useSelector((state) => state.chat.chats);
@@ -45,11 +74,13 @@ export default function ProfilePage() {
   const securitySectionRef = useRef(null);
   const profileSectionRef = useRef(null);
 
+  // Profile form only contains the fields supported by the backend update endpoint.
   const [profileForm, setProfileForm] = useState({
-    fullName: '',
-    username: '',
+    name: '',
     email: '',
   });
+
+  // Security form is still local-only for now and keeps the current page structure intact.
   const [securityForm, setSecurityForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -58,6 +89,7 @@ export default function ProfilePage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [securitySaving, setSecuritySaving] = useState(false);
   const [profileStatus, setProfileStatus] = useState('');
+  const [profileError, setProfileError] = useState('');
   const [securityStatus, setSecurityStatus] = useState('');
   const [securityError, setSecurityError] = useState('');
 
@@ -75,6 +107,10 @@ export default function ProfilePage() {
   );
   const lastActive = sortedChats[0]?.lastUpdated || null;
 
+  /**
+   * This object prepares the user data in the exact shape expected by the
+   * existing profile UI components like ProfileHeader and UserDropdown.
+   */
   const baseProfile = useMemo(() => {
     const fullName = toDisplayName(user);
     const username = user?.username || 'neural_operator';
@@ -92,18 +128,18 @@ export default function ProfilePage() {
     };
   }, [user]);
 
+  // Whenever Redux user data changes, refresh the local form with the latest saved values.
   useEffect(() => {
     setProfileForm({
-      fullName: baseProfile.fullName,
-      username: baseProfile.username,
+      name: baseProfile.fullName,
       email: baseProfile.email,
     });
-  }, [baseProfile.email, baseProfile.fullName, baseProfile.username]);
+  }, [baseProfile.email, baseProfile.fullName]);
 
+  // Dirty check decides whether the save button should be enabled.
   const profileDirty =
-    profileForm.fullName !== baseProfile.fullName ||
-    profileForm.username !== baseProfile.username ||
-    profileForm.email !== baseProfile.email;
+    normalizeNameValue(profileForm.name) !== normalizeNameValue(baseProfile.fullName) ||
+    normalizeEmailValue(profileForm.email) !== normalizeEmailValue(baseProfile.email);
 
   const headerStats = useMemo(
     () => [
@@ -177,9 +213,12 @@ export default function ProfilePage() {
     });
   }, []);
 
+  // Keep the profile form controlled so UI and state always stay in sync.
   const handleProfileChange = useCallback((event) => {
     const { name, value } = event.target;
 
+    setProfileStatus('');
+    setProfileError('');
     setProfileForm((current) => ({
       ...current,
       [name]: value,
@@ -195,46 +234,84 @@ export default function ProfilePage() {
     }));
   }, []);
 
+  // Reset the local form back to the latest saved profile values.
   const handleCancelProfile = useCallback(() => {
     setProfileForm({
-      fullName: baseProfile.fullName,
-      username: baseProfile.username,
+      name: baseProfile.fullName,
       email: baseProfile.email,
     });
     setProfileStatus('');
-  }, [baseProfile.email, baseProfile.fullName, baseProfile.username]);
+    setProfileError('');
+  }, [baseProfile.email, baseProfile.fullName]);
 
   const handleSaveProfile = useCallback(async () => {
-    if (!profileDirty || profileSaving) return;
+    if (profileSaving) return;
 
-    setProfileSaving(true);
+    // Step 1: Get user input from the controlled profile form.
+    const nextName = normalizeNameValue(profileForm.name);
+    const nextEmail = normalizeEmailValue(profileForm.email);
+    const currentName = normalizeNameValue(baseProfile.fullName);
+    const currentEmail = normalizeEmailValue(baseProfile.email);
+
     setProfileStatus('');
+    setProfileError('');
 
-    await wait(850);
+    if (!nextName) {
+      setProfileError('Full name is required before saving.');
+      return;
+    }
 
-    dispatch(
-      setUser({
-        ...user,
-        fullName: profileForm.fullName.trim() || baseProfile.fullName,
-        username: profileForm.username.trim() || baseProfile.username,
-        email: profileForm.email.trim() || baseProfile.email,
-      })
-    );
+    if (!nextEmail) {
+      setProfileError('Email is required before saving.');
+      return;
+    }
 
-    setProfileStatus('Profile details synchronized successfully.');
-    setProfileSaving(false);
+    if (!emailRegex.test(nextEmail)) {
+      setProfileError('Enter a valid email address before saving.');
+      return;
+    }
+
+    // Step 2: Only send fields that were actually changed.
+    const updatePayload = {};
+
+    if (nextName !== currentName) {
+      updatePayload.name = nextName;
+    }
+
+    if (nextEmail !== currentEmail) {
+      updatePayload.email = nextEmail;
+    }
+
+    if (!Object.keys(updatePayload).length) {
+      setProfileStatus('Your profile is already up to date.');
+      return;
+    }
+
+    // Step 3: Show local saving state for the profile form.
+    setProfileSaving(true);
+
+    try {
+      // Step 4: Call the protected update profile API using the existing auth hook pattern.
+      const updatedUser = await handleUpdateProfile(updatePayload);
+
+      // Step 5: Refresh the local form with the saved values from Redux/API.
+      setProfileForm({
+        name: toDisplayName(updatedUser),
+        email: updatedUser?.email || nextEmail,
+      });
+      setProfileStatus('Profile details synchronized successfully.');
+    } catch (error) {
+      setProfileError(error.message || 'Unable to update your profile right now.');
+    } finally {
+      setProfileSaving(false);
+    }
   }, [
     baseProfile.email,
     baseProfile.fullName,
-    baseProfile.username,
-    dispatch,
-    profileDirty,
+    handleUpdateProfile,
     profileForm.email,
-    profileForm.fullName,
-    profileForm.username,
+    profileForm.name,
     profileSaving,
-    user,
-    wait,
   ]);
 
   const handleSaveSecurity = useCallback(async () => {
@@ -280,6 +357,7 @@ export default function ProfilePage() {
     navigate('/dashboard');
   }, [dispatch, navigate]);
 
+  // Sidebar shortcuts scroll directly to the matching section on the same page.
   const scrollToProfile = useCallback(() => {
     profileSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -431,6 +509,7 @@ export default function ProfilePage() {
                     isSaving={profileSaving}
                     isDirty={profileDirty}
                     statusMessage={profileStatus}
+                    errorMessage={profileError}
                   />
                 </div>
 
@@ -504,10 +583,10 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={handleSaveProfile}
-          disabled={profileSaving}
+          disabled={profileSaving || !profileDirty}
           className="inline-flex h-16 w-full items-center justify-center rounded-[1.75rem] bg-[linear-gradient(135deg,rgba(34,211,238,0.98),rgba(67,97,238,0.92))] px-6 text-lg font-black tracking-tight text-slate-950 shadow-[0_20px_55px_rgba(34,211,238,0.2)] transition duration-300 active:scale-[0.99] disabled:opacity-60"
         >
-          {profileSaving ? 'Synchronizing...' : profileDirty ? 'Save Changes' : 'Synchronize Profile'}
+          {profileSaving ? 'Saving...' : profileDirty ? 'Save Changes' : 'Profile In Sync'}
         </button>
       </div>
     </div>
