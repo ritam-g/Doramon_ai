@@ -43,20 +43,101 @@ export async function registerController(req, res) {
         }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' })
         //NOTE - now send professional mail to user for verification
         let html = `
-        <p>Hi ${userResponse.username},</p>
-        <p>Click <a href="http://localhost:5000/api/auth/verify-email?token=${verificaitonToken}">here</a> to verify your email.</p>
-        <p>Thank you for registering with us.</p>
-        <p>Best regards,</p>
-        <p>The Team</p>
-        `;
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Email Verification</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0f172a;font-family:Arial,sans-serif;">
 
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+    <tr>
+      <td align="center">
 
-        // Send email (non-blocking, don't await to prevent crash)
-        try {
-            sendEmail(email, 'Email verification', 'Please verify your email', html)
-        } catch (err) {
-            console.error('Email sending failed:', err.message);
-        }
+        <!-- Main Container -->
+        <table width="420" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;padding:30px;color:#e5e7eb;">
+
+          <!-- Logo / Brand -->
+          <tr>
+            <td align="center" style="padding-bottom:20px;">
+              <h2 style="margin:0;color:#38bdf8;">Doraemon AI</h2>
+              <p style="margin:5px 0 0;font-size:12px;color:#9ca3af;">Secure AI Workspace</p>
+            </td>
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td>
+              <p style="font-size:16px;">Hi <strong>${userResponse.username}</strong>,</p>
+              <p style="font-size:14px;color:#9ca3af;">
+                Welcome! Please confirm your email address to activate your account.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td align="center" style="padding:25px 0;">
+              <a href="http://localhost:5000/api/auth/verify-email?token=${verificaitonToken}"
+                 style="background:linear-gradient(135deg,#22d3ee,#3b82f6);
+                        color:#000;
+                        text-decoration:none;
+                        padding:12px 24px;
+                        border-radius:8px;
+                        font-weight:bold;
+                        display:inline-block;">
+                Verify Email
+              </a>
+            </td>
+          </tr>
+
+          <!-- Info -->
+          <tr>
+            <td>
+              <p style="font-size:12px;color:#9ca3af;">
+                This link will expire in 10 minutes.
+              </p>
+              <p style="font-size:12px;color:#9ca3af;">
+                If you didn’t create this account, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:15px 0;">
+              <hr style="border:none;border-top:1px solid #1f2937;">
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td>
+              <p style="font-size:12px;color:#6b7280;">
+                Need help? Contact support@cognitive.ai
+              </p>
+              <p style="font-size:12px;color:#6b7280;">
+                © ${new Date().getFullYear()} Cognitive AI. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`;
+        await sendEmail({
+            to: userResponse.email,
+            subject: 'Email Verification',
+            text: `Please click the following link to verify your email: http://localhost:5000/api/auth/verify-email?token=${verificaitonToken}`,
+            html: html
+        });
 
 
         return res.status(201).json({
