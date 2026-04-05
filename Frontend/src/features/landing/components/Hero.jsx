@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router';
+import { landingContainerClass, landingSectionSpacingClass } from '../layout';
 const MotionDiv = motion.div;
 
 const Hero = () => {
   return (
-    <section className="relative pt-24 pb-32 sm:pt-32 sm:pb-48 overflow-hidden z-[50]">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section className={`relative z-[50] overflow-hidden ${landingSectionSpacingClass}`}>
+      <div className={`${landingContainerClass} grid grid-cols-1 items-center gap-16 lg:grid-cols-2`}>
         {/* Hero Left Content */}
         <MotionDiv
            initial={{ opacity: 0, x: -50 }}
@@ -114,8 +115,8 @@ const Hero = () => {
       </div>
       
       {/* Logos Strip Mockup */}
-      <div className="max-w-7xl mx-auto px-6 mt-32 border-t border-white/5 pt-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 opacity-40 grayscale hover:grayscale-0 transition-all">
+      <div className={`${landingContainerClass} mt-16 border-t border-white/5 pt-10 md:mt-20 md:pt-12 lg:mt-24`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 opacity-80 grayscale hover:grayscale-0 transition-all">
           <div className="flex items-center justify-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-[10px] text-center">
             <span className="material-symbols-outlined text-zinc-600">verified</span>
             Built with Modern AI

@@ -1,5 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import {
+  landingContainerClass,
+  landingSectionHeaderSpacingClass,
+  landingSectionSpacingClass,
+} from '../layout';
 const MotionDiv = motion.div;
 const MotionH2 = motion.h2;
 
@@ -23,16 +28,16 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-32 bg-zinc-950/20 backdrop-blur-3xl relative">
+    <section className={`relative bg-zinc-950/20 backdrop-blur-3xl ${landingSectionSpacingClass}`}>
        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent opacity-30"></div>
        
-       <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+       <div className={`${landingContainerClass} relative z-10 text-center`}>
           <MotionH2 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-24"
+            className={`text-4xl font-black tracking-tighter text-white md:text-5xl ${landingSectionHeaderSpacingClass}`}
           >
             The Path to Intelligence
           </MotionH2>

@@ -1,5 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import {
+  landingContainerClass,
+  landingSectionHeaderSpacingClass,
+  landingSectionSpacingClass,
+} from '../layout';
 const MotionDiv = motion.div;
 const MotionH2 = motion.h2;
 const MotionP = motion.p;
@@ -52,9 +57,9 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-32 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
+    <section className={`relative overflow-hidden ${landingSectionSpacingClass}`}>
+      <div className={`${landingContainerClass} relative z-10`}>
+        <div className={`mx-auto max-w-2xl space-y-4 text-center ${landingSectionHeaderSpacingClass}`}>
           <MotionH2 
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}

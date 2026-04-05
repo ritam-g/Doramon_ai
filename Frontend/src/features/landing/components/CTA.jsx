@@ -1,25 +1,31 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router';
+import {
+  landingNarrowContainerClass,
+  landingSectionSpacingClass,
+} from '../layout';
 const MotionH2 = motion.h2;
 const MotionP = motion.p;
 const MotionDiv = motion.div;
 
 const CTA = () => {
   return (
-    <section className="layout-cta relative flex items-center py-16 sm:py-20 lg:py-24 overflow-hidden">
-       {/* This section is allowed to absorb leftover page height so the footer
-           stays attached without exposing an empty flex gap above it. */}
+    <section
+      className={`layout-cta relative flex flex-1 items-center overflow-hidden ${landingSectionSpacingClass}`}
+    >
+       {/* CTA is the only flexible end-cap in the landing flow, so spare
+           viewport height is absorbed here instead of by margin or min-height hacks. */}
        {/* Background Glow */}
-       <div className="absolute inset-0 z-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[800px] bg-cyan-500/10 rounded-full blur-[240px] animate-pulse"></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[180px] animate-pulse duration-[3000ms]"></div>
-       </div>
+        <div className="absolute inset-0 z-0">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[800px] bg-cyan-500/10 rounded-full blur-[240px] animate-pulse"></div>
+           <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[180px] animate-pulse duration-[3000ms]"></div>
+        </div>
 
-       <div className="relative z-10 mx-auto w-full max-w-4xl px-6 space-y-10 sm:space-y-12">
-          <MotionH2 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+       <div className={`relative z-10 space-y-10 sm:space-y-12 ${landingNarrowContainerClass}`}>
+           <MotionH2 
+             initial={{ opacity: 0, scale: 0.9 }}
+             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
             className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-tight"

@@ -6,10 +6,11 @@ import HowItWorks from '../components/HowItWorks';
 import Preview from '../components/Preview';
 import CTA from '../components/CTA';
 import Footer from '../components/Footer';
+import { landingContainerClass, landingRootClass } from '../layout';
 
 const LandingPage = () => {
   return (
-    <div className="layout-root relative flex min-h-[100vh] flex-col overflow-x-hidden bg-[#05070D] font-['Inter'] text-[#E6EDF3] selection:bg-cyan-500/30">
+    <div className={`layout-root relative flex min-h-screen flex-col overflow-x-hidden ${landingRootClass} font-['Inter'] text-[#E6EDF3] selection:bg-cyan-500/30`}>
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#0B0F1A] rounded-full blur-[160px] opacity-60"></div>
@@ -17,12 +18,10 @@ const LandingPage = () => {
         <div className="absolute top-[30%] right-[10%] w-[30%] h-[40%] bg-[#4fdbc811] rounded-full blur-[140px] opacity-30"></div>
       </div>
 
-      {/* Making `main-content` a column lets the closing CTA expand naturally,
-          instead of leaving unused flex height as a blank gap above the footer. */}
       <main className="main-content relative z-10 flex flex-1 flex-col">
         {/* Navbar */}
         <nav className="sticky top-0 w-full z-[100] border-b border-white/5 bg-[#05070D]/70 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+          <div className={`${landingContainerClass} h-18 flex items-center justify-between`}>
             <div className="flex items-center gap-2">
               <span className="text-xl font-black text-white tracking-tighter">Doraemon</span>
               <span className="text-[10px] text-zinc-500 border border-zinc-800 px-1.5 py-0.5 rounded uppercase font-bold tracking-tighter self-start mt-1">Intelligence v2.4</span>
@@ -42,11 +41,14 @@ const LandingPage = () => {
           </div>
         </nav>
 
-        {/* Page Sections */}
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Preview />
+        {/* Keep the content stack strictly content-sized.
+            The CTA below is the only flexible landing section, so spare height is absorbed cleanly. */}
+        <div className="landing-sections">
+          <Hero />
+          <Features />
+          <HowItWorks />
+          <Preview />
+        </div>
         <CTA />
       </main>
 

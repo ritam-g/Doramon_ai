@@ -1,10 +1,18 @@
 import React from 'react';
+import {
+  landingContainerClass,
+  landingFooterLinkClass,
+  landingRootClass,
+} from '../layout';
 
 const Footer = () => {
   return (
-    <footer className="footer-root relative z-20 shrink-0 border-t border-white/5 bg-[#05070D]">
-      {/* The footer no longer needs auto margins because the CTA now absorbs spare height above it. */}
-      <div className="footer-container mx-auto max-w-7xl px-6 py-8 sm:py-10">
+    <footer
+      className={`footer-root relative z-20 shrink-0 border-t border-white/5 ${landingRootClass}`}
+    >
+      {/* Page height is controlled by the root/main layout above, so the footer
+          can stay content-sized and predictable across breakpoints. */}
+      <div className={`footer-container py-8 md:py-10 ${landingContainerClass}`}>
         <div className="footer-top flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="footer-brand flex flex-col gap-3 text-center md:text-left">
             <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
@@ -16,10 +24,10 @@ const Footer = () => {
           </div>
 
           <div className="footer-links grid grid-cols-2 gap-6 text-center sm:grid-cols-4 md:text-right">
-            <a href="https://x.com/maty_ritam" className="footer-link">TWITTER</a>
-            <a href="https://github.com/ritam-g" className="footer-link">GITHUB</a>
-            <a href="https://www.linkedin.com/in/ritammaty/" className="footer-link">LINKEDIN</a>
-            <a href="#" className="footer-link">TERMS</a>
+            <a href="https://x.com/maty_ritam" className={landingFooterLinkClass}>TWITTER</a>
+            <a href="https://github.com/ritam-g" className={landingFooterLinkClass}>GITHUB</a>
+            <a href="https://www.linkedin.com/in/ritammaty/" className={landingFooterLinkClass}>LINKEDIN</a>
+            <a href="#" className={landingFooterLinkClass}>TERMS</a>
           </div>
         </div>
 
