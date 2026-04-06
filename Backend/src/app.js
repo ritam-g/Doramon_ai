@@ -10,6 +10,7 @@ import userRouter from './routes/user.route.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import path from 'path'
 import fs from 'fs';
+import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 // Load environment variables from .env file
 dotenv.config();
@@ -76,7 +77,22 @@ if (clientBuildDir) {
 
 // NOTE - Routers
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ success: true, message: 'Server is healthy' });
+  const mongoStates = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+
+  const mongoStateCode = mongoose.connection.readyState;
+  const mongoState = mongoStates[mongoStateCode] || 'unknown';
+  const isDbConnected = mongoStateCode === 1;
+
+  res.status(isDbConnected ? 200 : 503).json({
+    success: isDbConnected,
+    message: isDbConnected ? 'Server is healthy' : 'Server is up but database is not connected',
+    database: mongoState,
+  });
 });
 app.use('/api/auth', authRouter);
 app.use('/api/chats', chatRouter)

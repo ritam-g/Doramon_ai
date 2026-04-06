@@ -59,17 +59,19 @@ function getClearCookieOptions() {
  */
 export async function registerController(req, res) {
     try {
-        const { username, email, password } = req.body;
+        const username = req.body?.username?.trim();
+        const email = req.body?.email?.trim().toLowerCase();
+        const password = req.body?.password;
 
         // Check if user already exists
         const existingUser = await userModel.findOne({
-            $or: [{ email: email.toLowerCase() }, { username: username }]
+            $or: [{ email }, { username }]
         });
 
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: existingUser.email === email.toLowerCase()
+                message: existingUser.email === email
                     ? 'Email already registered'
                     : 'Username already taken'
             });
@@ -78,7 +80,7 @@ export async function registerController(req, res) {
         // Create new user
         const userResponse = await userModel.create({
             username: username,
-            email: email.toLowerCase(),
+            email,
             password: password
         });
 
@@ -192,11 +194,41 @@ export async function registerController(req, res) {
         return res.status(201).json({
             success: true,
             message: 'Registration successful',
-            user: userResponse
+            user: {
+                id: userResponse._id,
+                fullName: userResponse.username,
+                username: userResponse.username,
+                email: userResponse.email,
+                createdAt: userResponse.createdAt,
+                verified: userResponse.verified,
+            }
         });
 
     } catch (error) {
         console.error('Registration error:', error);
+        if (error?.code === 11000) {
+            const duplicateField = Object.keys(error?.keyPattern || {})[0];
+            const duplicateMessage =
+                duplicateField === 'email'
+                    ? 'Email already registered'
+                    : duplicateField === 'username'
+                        ? 'Username already taken'
+                        : 'User already exists';
+
+            return res.status(400).json({
+                success: false,
+                message: duplicateMessage
+            });
+        }
+
+        if (error?.name === 'ValidationError') {
+            const firstValidationError = Object.values(error.errors || {})[0];
+            return res.status(400).json({
+                success: false,
+                message: firstValidationError?.message || 'Invalid registration data'
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Server error during registration'
@@ -274,15 +306,16 @@ export async function verifyEmailController(req, res, next) {
 
 export async function userLoginController(req, res, next) {
     try {
-        const { username, email, password } = req.body
-        if (!password) {
+        const normalizedEmail = req.body?.email?.trim().toLowerCase();
+        const password = req.body?.password;
+        if (!normalizedEmail || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required'
+                message: 'Email and password are required'
             });
         }
         // Check if user exists
-        const user = await userModel.findOne({ email: email.toLowerCase() }).select('+password')
+        const user = await userModel.findOne({ email: normalizedEmail }).select('+password')
         //! Check if user exists and is verified
         if (!user || !user.verified) {
             return res.status(400).json({

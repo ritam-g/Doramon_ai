@@ -79,8 +79,10 @@ export function useAuth() {
             dispatch(setError(null))
 
             await RegisterApi({ username, email, password })
+            return true
         } catch (error) {
             dispatch(setError(getErrorMessage(error)))
+            return false
         } finally {
             dispatch(setLoading(false))
         }
@@ -101,7 +103,12 @@ export function useAuth() {
             dispatch(setUser(normalizeUser(data.user)))
         } catch (error) {
             dispatch(setUser(null))
-            dispatch(setError(getErrorMessage(error)))
+            // 401 on first load is expected when user is not logged in.
+            if (error?.response?.status === 401) {
+                dispatch(setError(null))
+            } else {
+                dispatch(setError(getErrorMessage(error)))
+            }
         } finally {
             dispatch(setLoading(false))
         }

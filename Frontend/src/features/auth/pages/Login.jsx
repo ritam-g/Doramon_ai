@@ -37,7 +37,6 @@ const Login = () => {
     await handleLogin(payload)
   };
   if (loading) return <PageLoader />
-  if(!loading && user) navigate('/chat')
   return (
     <section className="relative min-h-screen overflow-hidden bg-zinc-950 px-4 py-10 text-zinc-100 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0">
@@ -133,4 +132,3 @@ const Login = () => {
 };
 
 export default Login;
-

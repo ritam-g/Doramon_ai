@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from 'react-router';
 import { useAuth } from "../hook/useAuth";
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
 import { PageLoader } from "../../../app/route-utils";
 
 const Register = () => {
@@ -15,10 +16,16 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  useEffect(() => {
+    if (user) {
+      navigate('/chat')
+    }
+  }, [user, navigate])
+
   // -------------------------
   // Form submit
   // -------------------------
-  const submitForm = (event) => {
+  const submitForm = async (event) => {
     event.preventDefault();
 
     const payload = {
@@ -26,11 +33,12 @@ const Register = () => {
       email,
       password,
     };
-    handleRegister(payload)
-    navigate('/login')
+    const isRegistered = await handleRegister(payload)
+    if (isRegistered) {
+      navigate('/login')
+    }
   };
   if (loading) return <PageLoader />
-  if(!loading && user) navigate('/chat')
   return (
     <section className="relative min-h-screen overflow-hidden bg-zinc-950 px-4 py-10 text-zinc-100 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0">
