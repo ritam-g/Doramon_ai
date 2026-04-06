@@ -2,8 +2,9 @@ import axios from 'axios'
 
 // ===== API Client =====
 // 👉 Keep one axios instance so every chat request shares the same base URL and cookies.
+const url=import.meta.env.VITE_API_URL||'http://localhost:5000/api'
 const api = axios.create({
-    baseURL: `http://localhost:5000`+`/api/chats`,
+    baseURL: `${url}`+`/chats`,
     withCredentials: true
 })
 
