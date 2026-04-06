@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import 'dotenv/config';
 
 const isProduction = process.env.NODE_ENV === "production";
+const shouldSendVerificationEmail = (process.env.SEND_VERIFICATION_EMAIL || "false") === "true";
 const appUrl = (
     process.env.APP_URL ||
     process.env.APP_BASE_URL ||
@@ -84,16 +85,17 @@ export async function registerController(req, res) {
             password: password
         });
 
-        //NOTE - creaing a verification token
-        const verificaitonToken = jwt.sign({
-            email: userResponse.email,
-            id: userResponse._id
-        }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' })
-        const requestBaseUrl = `${req.protocol}://${req.get('host')}`.replace(/\/+$/, '');
-        const verificationBaseUrl = appUrl || requestBaseUrl;
-        const verificationUrl = `${verificationBaseUrl}/api/auth/verify-email?token=${verificaitonToken}`;
-        //NOTE - now send professional mail to user for verification
-        let html = `
+        if (shouldSendVerificationEmail) {
+            // Create verification token only when verification email is enabled.
+            const verificaitonToken = jwt.sign({
+                email: userResponse.email,
+                id: userResponse._id
+            }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' })
+            const requestBaseUrl = `${req.protocol}://${req.get('host')}`.replace(/\/+$/, '');
+            const verificationBaseUrl = appUrl || requestBaseUrl;
+            const verificationUrl = `${verificationBaseUrl}/api/auth/verify-email?token=${verificaitonToken}`;
+            // Send verification mail
+            let html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -183,29 +185,32 @@ export async function registerController(req, res) {
 </body>
 </html>
 `;
-        try {
-            await sendEmail({
-                to: userResponse.email,
-                subject: 'Email Verification',
-                text: `Please click the following link to verify your email: ${verificationUrl}`,
-                html: html
-            });
-        } catch (emailError) {
-            // Hard guarantee: if email fails, rollback created user.
-            await userModel.findByIdAndDelete(userResponse._id).catch((cleanupError) => {
-                console.error('Failed to rollback user after email failure:', cleanupError);
-            });
+            try {
+                await sendEmail({
+                    to: userResponse.email,
+                    subject: 'Email Verification',
+                    text: `Please click the following link to verify your email: ${verificationUrl}`,
+                    html: html
+                });
+            } catch (emailError) {
+                // In verification-email mode, email delivery is required.
+                await userModel.findByIdAndDelete(userResponse._id).catch((cleanupError) => {
+                    console.error('Failed to rollback user after email failure:', cleanupError);
+                });
 
-            return res.status(503).json({
-                success: false,
-                message: 'Unable to send verification email right now. Please try again in a moment.'
-            });
+                return res.status(503).json({
+                    success: false,
+                    message: 'Unable to send verification email right now. Please try again in a moment.'
+                });
+            }
         }
 
 
         return res.status(201).json({
             success: true,
-            message: 'Registration successful',
+            message: shouldSendVerificationEmail
+                ? 'Registration successful. Please check your email to verify your account.'
+                : 'Registration successful. Please login.',
             user: {
                 id: userResponse._id,
                 fullName: userResponse.username,

@@ -35,7 +35,7 @@ const Register = () => {
     };
     const isRegistered = await handleRegister(payload)
     if (isRegistered) {
-      navigate('/login')
+      navigate('/login', { replace: true })
     }
   };
   if (loading) return <PageLoader />
