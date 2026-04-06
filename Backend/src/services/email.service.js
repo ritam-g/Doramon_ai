@@ -1,69 +1,75 @@
 import "dotenv/config";
 import dns from "node:dns";
-import { promisify } from "node:util";
 import nodemailer from "nodemailer";
 
 dns.setDefaultResultOrder("ipv4first");
-const resolve4 = promisify(dns.resolve4);
 
 const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
 const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
 const SMTP_SECURE = (process.env.SMTP_SECURE || "true") === "true";
 const SMTP_FORCE_IPV4 = (process.env.SMTP_FORCE_IPV4 || "true") === "true";
-const SMTP_CONNECTION_TIMEOUT = Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000);
-const SMTP_GREETING_TIMEOUT = Number(process.env.SMTP_GREETING_TIMEOUT || 10000);
-const SMTP_SOCKET_TIMEOUT = Number(process.env.SMTP_SOCKET_TIMEOUT || 20000);
+const SMTP_CONNECTION_TIMEOUT = Number(process.env.SMTP_CONNECTION_TIMEOUT || 12000);
+const SMTP_GREETING_TIMEOUT = Number(process.env.SMTP_GREETING_TIMEOUT || 9000);
+const SMTP_SOCKET_TIMEOUT = Number(process.env.SMTP_SOCKET_TIMEOUT || 15000);
 
 function getSanitizedEmailPassword() {
   // Google app passwords are often pasted with spaces. Remove them defensively.
   return (process.env.GOOGLE_EMAIL_PASS || "").replace(/\s+/g, "");
 }
 
-async function buildTransport() {
-  let smtpHost = SMTP_HOST;
-  const tlsOptions = { minVersion: "TLSv1.2" };
-
-  if (SMTP_FORCE_IPV4) {
-    try {
-      const addresses = await resolve4(SMTP_HOST);
-      if (addresses?.length) {
-        smtpHost = addresses[0];
-        // Required when connecting to an IP over TLS for correct cert validation.
-        tlsOptions.servername = SMTP_HOST;
-      }
-    } catch (error) {
-      console.warn(`IPv4 DNS resolve failed for ${SMTP_HOST}. Falling back to hostname.`);
-    }
-  }
-
+function createTransport({ port, secure }) {
   return nodemailer.createTransport({
-    host: smtpHost,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
+    host: SMTP_HOST,
+    port,
+    secure,
     auth: {
       user: process.env.GOOGLE_EMAIL_USER,
       pass: getSanitizedEmailPassword(),
     },
+    // Prefer IPv4 for providers/environments that have flaky IPv6 egress.
+    family: SMTP_FORCE_IPV4 ? 4 : 0,
     connectionTimeout: SMTP_CONNECTION_TIMEOUT,
     greetingTimeout: SMTP_GREETING_TIMEOUT,
     socketTimeout: SMTP_SOCKET_TIMEOUT,
-    tls: tlsOptions,
+    dnsTimeout: 8000,
+    tls: {
+      minVersion: "TLSv1.2",
+      servername: SMTP_HOST,
+    },
   });
 }
 
-async function sendWithRetry(mailOptions, maxAttempts = 2) {
+function getSmtpStrategies() {
+  const strategies = [{ port: SMTP_PORT, secure: SMTP_SECURE }];
+
+  // Gmail fallback path: if explicit config fails, try submission port 587.
+  if (SMTP_HOST === "smtp.gmail.com" && (SMTP_PORT !== 587 || SMTP_SECURE !== false)) {
+    strategies.push({ port: 587, secure: false });
+  }
+
+  // Add 465 fallback if primary is not that.
+  if (SMTP_HOST === "smtp.gmail.com" && (SMTP_PORT !== 465 || SMTP_SECURE !== true)) {
+    strategies.push({ port: 465, secure: true });
+  }
+
+  return strategies;
+}
+
+async function sendWithFallback(mailOptions) {
+  const strategies = getSmtpStrategies();
   let lastError;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+  for (let index = 0; index < strategies.length; index += 1) {
+    const strategy = strategies[index];
+    const label = `${SMTP_HOST}:${strategy.port} secure=${strategy.secure}`;
+
     try {
-      const transporter = await buildTransport();
-      return await transporter.sendMail(mailOptions);
+      const transporter = createTransport(strategy);
+      const info = await transporter.sendMail(mailOptions);
+      return info;
     } catch (error) {
       lastError = error;
-      console.error(`Email attempt ${attempt}/${maxAttempts} failed:`, error?.message || error);
-      if (attempt < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 750));
-      }
+      console.error(`Email strategy ${index + 1}/${strategies.length} failed (${label}):`, error?.message || error);
     }
   }
 
@@ -75,7 +81,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     throw new Error("Email service is not configured");
   }
 
-  const info = await sendWithRetry({
+  const info = await sendWithFallback({
     from: process.env.MAIL_FROM || process.env.GOOGLE_EMAIL_USER,
     to,
     subject,
