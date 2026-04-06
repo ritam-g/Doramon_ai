@@ -8,6 +8,8 @@ import chatRouter from './routes/chat.route.js';
 import fileRouter from './routes/file.route.js';
 import userRouter from './routes/user.route.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import path from 'path'
+import { fileURLToPath } from 'url';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -15,7 +17,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 }));
@@ -23,10 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(morgan("dev"))
-// Routes
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, '../public')));
 
 
 // NOTE - Routers
@@ -35,7 +40,9 @@ app.use('/api/chats', chatRouter)
 app.use("/api/files", fileRouter);
 // User profile routes live under /api/users, including PATCH /api/users/profile.
 app.use('/api/users', userRouter)
-
+app.get('*any', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'))
+})
 
 // Error handling middleware
 app.use(errorHandler);
