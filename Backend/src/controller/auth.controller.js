@@ -183,12 +183,24 @@ export async function registerController(req, res) {
 </body>
 </html>
 `;
-        await sendEmail({
-            to: userResponse.email,
-            subject: 'Email Verification',
-            text: `Please click the following link to verify your email: ${verificationUrl}`,
-            html: html
-        });
+        try {
+            await sendEmail({
+                to: userResponse.email,
+                subject: 'Email Verification',
+                text: `Please click the following link to verify your email: ${verificationUrl}`,
+                html: html
+            });
+        } catch (emailError) {
+            // Hard guarantee: if email fails, rollback created user.
+            await userModel.findByIdAndDelete(userResponse._id).catch((cleanupError) => {
+                console.error('Failed to rollback user after email failure:', cleanupError);
+            });
+
+            return res.status(503).json({
+                success: false,
+                message: 'Unable to send verification email right now. Please try again in a moment.'
+            });
+        }
 
 
         return res.status(201).json({
