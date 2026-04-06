@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL||'http://localhost:5000/api'
+import { API_BASE_URL } from '../../../app/config/env'
 
 /**
  * Auth API client
@@ -70,4 +69,3 @@ export async function updateUserProfileApi(payload) {
     const { data } = await userApi.patch('/profile', payload)
     return data
 }
-

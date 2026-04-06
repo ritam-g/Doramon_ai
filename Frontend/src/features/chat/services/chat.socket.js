@@ -1,13 +1,24 @@
 import { io } from 'socket.io-client'
-let socket;
-const url=import.meta.env.VITE_SOCKET_URL||'http://localhost:5000'
-export function initializedSocketConnection() {
-    socket = io("http://localhost:5000",{
-        withCredentials: true
-    })
+import { SOCKET_URL } from '../../../app/config/env'
 
-    socket.on("connect", () => {
-        console.log("Connected to the server");
+let socket;
+
+export function initializedSocketConnection() {
+    if (socket) {
+        return socket;
+    }
+
+    socket = io(SOCKET_URL, {
+        withCredentials: true,
     });
+
+    socket.on('connect', () => {
+        console.log('Connected to the server');
+    });
+
+    return socket;
 }
-export function getSocket() { return socket; }
+
+export function getSocket() {
+    return socket;
+}

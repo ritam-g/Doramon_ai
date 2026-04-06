@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: perplexity-app
+    env: node
+    rootDir: .
+    buildCommand: |
+      npm --prefix Frontend ci
+      npm --prefix Frontend run build
+      npm --prefix Backend ci
+    startCommand: npm --prefix Backend start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_BUILD_DIR
+        value: Frontend/dist
+      - key: CLIENT_URL
+        value: https://your-app.onrender.com
+      - key: APP_URL
+        value: https://your-app.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: VITE_API_URL
+        value: /api
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: GOOGLE_EMAIL_USER
+        sync: false
+      - key: GOOGLE_EMAIL_PASS
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_PUBLIC_KEY
+        sync: false
+      - key: IMAGEKIT_END_URL
+        sync: false
+      - key: VECTOR_API_KEY
+        sync: false
+      - key: VECTOR_INDEX_NAME
+        sync: false

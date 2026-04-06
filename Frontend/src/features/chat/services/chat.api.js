@@ -1,65 +1,63 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../../../app/config/env'
 
 // ===== API Client =====
-// 👉 Keep one axios instance so every chat request shares the same base URL and cookies.
-const url=import.meta.env.VITE_API_URL||'http://localhost:5000/api'
+// Keep one axios instance so every chat request shares the same base URL and cookies.
 const api = axios.create({
-    baseURL: `${url}`+`/chats`,
+    baseURL: `${API_BASE_URL}/chats`,
     withCredentials: true
 })
 
 // ===== Chat Requests =====
-/**  
+/**
  * @description Send message to AI
  * @route POST /api/chats/message
  * @access private
  */
 export async function sendMessage({ message, chatId, file }) {
-    // 👉 If there is a file attached, use FormData so multer can handle it
+    // If there is a file attached, use FormData so multer can handle it.
     if (file) {
         const formData = new FormData();
         formData.append('message', message);
         if (chatId) formData.append('chatId', chatId);
         formData.append('file', file);
-        
+
         const { data } = await api.post('/message', formData);
         return data;
     }
 
-    // 👉 `chatId` is optional: no id means "start a new chat" on the backend.
+    // `chatId` is optional: no id means start a new chat on the backend.
     const { data } = await api.post('/message', { message, chatId })
     return data
 }
 
-/**  
+/**
  * @description Get message
- * @route GET /api/chats
+ * @route GET /api/chats/:chatId
  * @access private
  */
 export async function getMessage({ chatId }) {
-    // 👉 Fetch one conversation when the user selects it from sidebar history.
     const { data } = await api.get(`/${chatId}`)
     return data
 }
 
-/**  
+/**
  * @description Delete message
  * @route DELETE /api/chats/delete
  * @access private
  */
 export async function deleteMessage({ chatId }) {
-    // 👉 Keep the payload shape unchanged so the existing backend contract still works.
-    const { data } = await api.delete('/delete', { chatId } )
+    // axios.delete expects payload under `data`.
+    const { data } = await api.delete('/delete', { data: { chatId } })
     return data
 }
 
-/**  
- * @description Get message
+/**
+ * @description Get chats
  * @route GET /api/chats
  * @access private
  */
 export async function getChat() {
-    // 👉 This returns chat metadata for the history list, not the full message bodies.
-    const { data } = await api.get(`/`)
+    const { data } = await api.get('/')
     return data
 }

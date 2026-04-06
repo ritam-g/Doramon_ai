@@ -3,6 +3,13 @@ import jwt from "jsonwebtoken";
 import { processChatMessage } from "../services/chat.service.js";
 import "dotenv/config";
 
+function parseAllowedOrigins(value = "") {
+  return value
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 // Shared Socket.IO instance used by the whole backend.
 // The frontend keeps one live socket connection and exchanges events with it.
 let io;
@@ -19,11 +26,14 @@ let io;
  * 5. Backend emits "stream" chunks, then "done", or "error" on failure.
  */
 export function initSocket(httpServer) {
+  const allowedOrigins = parseAllowedOrigins(process.env.CLIENT_URL || "");
+
   io = new Server(httpServer, {
     cors: {
-      // Allow the frontend dev server to open a websocket connection.
-      origin: "http://localhost:5173",
+      // When CLIENT_URL is not set, `true` reflects request origin in dev.
+      origin: allowedOrigins.length ? allowedOrigins : true,
       credentials: true,
+      methods: ["GET", "POST"],
     },
   });
 

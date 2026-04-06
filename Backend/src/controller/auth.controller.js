@@ -2,6 +2,52 @@ import userModel from "../models/user.model.js";
 import sendEmail from "../services/email.service.js";
 import jwt from "jsonwebtoken";
 import 'dotenv/config';
+
+const isProduction = process.env.NODE_ENV === "production";
+const appUrl = (
+    process.env.APP_URL ||
+    process.env.APP_BASE_URL ||
+    ""
+).replace(/\/+$/, "");
+const rawSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? "none" : "lax")).toLowerCase();
+const configuredSameSite = ["lax", "strict", "none"].includes(rawSameSite)
+    ? rawSameSite
+    : (isProduction ? "none" : "lax");
+const cookieSecure = configuredSameSite === "none"
+    ? true
+    : process.env.COOKIE_SECURE === "true";
+const cookieDomain = process.env.COOKIE_DOMAIN;
+
+function getAuthCookieOptions() {
+    const options = {
+        httpOnly: true,
+        secure: cookieSecure,
+        sameSite: configuredSameSite,
+        path: '/',
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    };
+
+    if (cookieDomain) {
+        options.domain = cookieDomain;
+    }
+
+    return options;
+}
+
+function getClearCookieOptions() {
+    const options = {
+        httpOnly: true,
+        secure: cookieSecure,
+        sameSite: configuredSameSite,
+        path: '/',
+    };
+
+    if (cookieDomain) {
+        options.domain = cookieDomain;
+    }
+
+    return options;
+}
 /**
  * Controller for user registration
  * @function
@@ -41,6 +87,9 @@ export async function registerController(req, res) {
             email: userResponse.email,
             id: userResponse._id
         }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' })
+        const requestBaseUrl = `${req.protocol}://${req.get('host')}`.replace(/\/+$/, '');
+        const verificationBaseUrl = appUrl || requestBaseUrl;
+        const verificationUrl = `${verificationBaseUrl}/api/auth/verify-email?token=${verificaitonToken}`;
         //NOTE - now send professional mail to user for verification
         let html = `
 <!DOCTYPE html>
@@ -79,7 +128,7 @@ export async function registerController(req, res) {
           <!-- CTA Button -->
           <tr>
             <td align="center" style="padding:25px 0;">
-              <a href="http://localhost:5000/api/auth/verify-email?token=${verificaitonToken}"
+              <a href="${verificationUrl}"
                  style="background:linear-gradient(135deg,#22d3ee,#3b82f6);
                         color:#000;
                         text-decoration:none;
@@ -135,7 +184,7 @@ export async function registerController(req, res) {
         await sendEmail({
             to: userResponse.email,
             subject: 'Email Verification',
-            text: `Please click the following link to verify your email: http://localhost:5000/api/auth/verify-email?token=${verificaitonToken}`,
+            text: `Please click the following link to verify your email: ${verificationUrl}`,
             html: html
         });
 
@@ -255,9 +304,7 @@ export async function userLoginController(req, res, next) {
             id: user._id
         }, process.env.JWT_SECRET_KEY, { expiresIn: '7d' })
         // Set token in cookie
-        res.cookie('token', token, {
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
+        res.cookie('token', token, getAuthCookieOptions())
         return res.status(200).json({
             success: true,
             message: 'Login successful',
@@ -317,7 +364,7 @@ export async function getMeUserController(req, res, next) {
 
 export async function logoutController(req, res) {
     try {
-        res.clearCookie('token')
+        res.clearCookie('token', getClearCookieOptions())
         return res.status(200).json({
             success: true,
             message: 'Logout successful'
