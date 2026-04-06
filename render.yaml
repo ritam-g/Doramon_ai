@@ -4,9 +4,9 @@ services:
     env: node
     rootDir: .
     buildCommand: |
-      npm --prefix Frontend ci
+      npm --prefix Frontend ci --include=dev
       npm --prefix Frontend run build
-      npm --prefix Backend ci
+      npm --prefix Backend ci --omit=dev
     startCommand: npm --prefix Backend start
     healthCheckPath: /api/health
     envVars:
