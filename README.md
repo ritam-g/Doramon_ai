@@ -1,10 +1,10 @@
-# 🚀 Perplexity AI - Full-Stack RAG Chat Application
+# 🚀 Doramon AI - Full-Stack RAG Chat Application
 
 ## 📖 Project Description
 
 Perplexity AI is a high-performance **Full-Stack AI Chat Application** engineered with the **MERN** stack and augmented with cutting-edge **Retrieval-Augmented Generation (RAG)** capabilities. It functions as a secure, private, and highly intelligent AI assistant that doesn't just chat, but actually "remembers" the documents you provide.
 
-By bridging the gap between large language models and your private data, this application allows users to upload PDFs, text files, and images, and query them in real-time. Instead of hitting a knowledge cutoff, the AI searches through your uploaded documents using high-dimensional vector embeddings, extracting relevant facts to generate precise, context-aware answers. 
+By bridging the gap between large language models and your private data, this application allows users to upload PDFs, text files, and images, and query them in real-time. Instead of hitting a knowledge cutoff, the AI searches through your uploaded documents using high-dimensional vector embeddings, extracting relevant facts to generate precise, context-aware answers.
 
 Built with performance and scalability in mind, the platform boasts real-time Socket.io communication, optimized vector search with Pinecone, and seamless integration with GenAI models like Mistral and Google Gemini.
 
@@ -27,6 +27,7 @@ Built with performance and scalability in mind, the platform boasts real-time So
 ## 🏗️ Tech Stack
 
 ### Frontend
+
 - **Framework:** React 19 + Vite
 - **Styling:** Tailwind CSS v4, Framer Motion (for buttery smooth animations)
 - **State Management:** Redux Toolkit
@@ -34,6 +35,7 @@ Built with performance and scalability in mind, the platform boasts real-time So
 - **Markdown:** React Markdown (for rendering AI responses properly)
 
 ### Backend
+
 - **Core:** Node.js, Express.js
 - **Database:** MongoDB (via Mongoose)
 - **Vector Database:** Pinecone
@@ -86,27 +88,34 @@ Perplexity/
 Follow these steps to run the project locally.
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/yourusername/perplexity-clone.git
 cd perplexity-clone
 ```
 
 ### 2. Setup the Backend
+
 ```bash
 cd Backend
 npm install
 ```
+
 Configure your `.env` file (see Environment Variables section), then start the development server:
+
 ```bash
 npm run dev
 ```
 
 ### 3. Setup the Frontend
+
 ```bash
 cd ../Frontend
 npm install
 ```
+
 Set up the environment variables, then start the Vite dev server:
+
 ```bash
 npm run dev
 ```
@@ -120,6 +129,7 @@ The frontend will be running on `http://localhost:5173` and the backend strictly
 You need to establish the following environment variables.
 
 **Backend (`Backend/.env`)**
+
 ```env
 # Application Settings
 NODE_ENV=development
@@ -151,6 +161,7 @@ GOOGLE_EMAIL_PASS=your_app_password
 ```
 
 **Frontend (`Frontend/.env`)**
+
 ```env
 VITE_API_URL=http://localhost:5000/api
 VITE_SOCKET_URL=http://localhost:5000
@@ -161,17 +172,20 @@ VITE_SOCKET_URL=http://localhost:5000
 ## 📡 API Endpoints
 
 ### 🟢 **Authentication**
+
 - `POST /api/auth/register` - Create a new user account.
 - `POST /api/auth/login` - Authenticate a user and set strict secure cookies.
 - `POST /api/auth/logout` - Clear user session.
 
 ### 🟡 **Chat & RAG System**
+
 - `GET /api/chats/` - Retrieve all user conversations.
 - `GET /api/chats/:chatId` - Load a specific conversation along with history.
 - `POST /api/chats/message` - Send a message and optional files. **(Triggers RAG)**
 - `DELETE /api/chats/delete` - Permanently remove a chat and references to vectors.
 
 ### 🟣 **Files & Users**
+
 - `POST /api/files/upload` - Securely upload a file to memory/cloud.
 - `PATCH /api/users/profile` - Update user aesthetic or personal metadata.
 
@@ -179,9 +193,10 @@ VITE_SOCKET_URL=http://localhost:5000
 
 ## 🧠 Architecture Explanation
 
-The RAG (Retrieval-Augmented Generation) system acts as the "brain" of the application. 
+The RAG (Retrieval-Augmented Generation) system acts as the "brain" of the application.
 
 Here is how data flows when you upload a document and ask a question:
+
 1. **Extraction & Chunking:** When a file (PDF, Image, Text) hits the server, `multer` puts it in memory. Text is extracted dynamically and split into overlapping chunks (e.g., 500 characters each).
 2. **Embedding:** The chunks are passed to the `mistral-embed` model to generate 1024-dimensional float vectors representing the semantic meaning of the text.
 3. **Storage (Pinecone):** Vectors are securely stored in Pinecone using your unique `userId` as a namespace. This ensures 100% data privacy.
@@ -220,6 +235,7 @@ Here is how data flows when you upload a document and ask a question:
 ## 🛠️ Future Improvements
 
 We have a massive roadmap planned to make this AI even better:
+
 - **Server-Sent Events (SSE):** Stream LLM tokens word-by-word for faster perceived performance.
 - **Hybrid Search (BM25):** Combine traditional keyword search with semantic matching for near-perfect precision.
 - **Cross-Encoder Re-ranking:** Optimize the top 5 Pinecone results for even better LLM prompt injection.
@@ -230,6 +246,7 @@ We have a massive roadmap planned to make this AI even better:
 ## 🤝 Contributing
 
 Contributions are always welcome. To contribute:
+
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
@@ -240,7 +257,8 @@ Contributions are always welcome. To contribute:
 
 ## 📄 License
 
-This project is licensed under the ISC License. See the `package.json` for more details. 
+This project is licensed under the ISC License. See the `package.json` for more details.
 
 ---
+
 Written with ❤️ by a passionate developer.
