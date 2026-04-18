@@ -3,6 +3,7 @@ import { authVerifyMiddleware } from "../middleware/auth.middleware.js";
 import { messageValidation } from "../middleware/validation.js";
 import { chatDeleteController, getChatControlelr, getMessageController, sendMessageController } from "../controller/chat.controller.js";
 import upload from "../middleware/uplode.middleware.js";
+import searchLimiter from "../middleware/rateLimiter/searchLimiter.js";
 
 const chatRouter = Router();
 
@@ -12,14 +13,14 @@ const chatRouter = Router();
  * @route - protected
  * @access - Private
  */
-chatRouter.post("/message", authVerifyMiddleware, upload.single('file'), messageValidation, sendMessageController)
+chatRouter.post("/message", searchLimiter,authVerifyMiddleware, upload.single('file'), messageValidation, sendMessageController)
 /** 
  * @description - user can get message but he should login first
  * @method - get method
  * @route - protected
  * @access - Private
  */
-chatRouter.get("/:chatId",authVerifyMiddleware,getMessageController)
+chatRouter.get("/:chatId",searchLimiter,authVerifyMiddleware,getMessageController)
 /**  
  * @description - user can delete message but he should login first
  * @method - delete method
@@ -33,5 +34,5 @@ chatRouter.delete("/delete",authVerifyMiddleware,chatDeleteController)
  * @route - protected
  * @access - Private
  */
-chatRouter.get("/",authVerifyMiddleware,getChatControlelr)
+chatRouter.get("/",searchLimiter,authVerifyMiddleware,getChatControlelr)
 export default chatRouter

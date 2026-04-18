@@ -12,6 +12,7 @@ import path from 'path'
 import fs from 'fs';
 import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
+import globalLimiter from './middleware/rateLimiter.middleware.js';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -49,6 +50,7 @@ const corsOptions = {
 app.set('trust proxy', 1);
 
 // Middleware
+// app.use(globalLimiter)
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

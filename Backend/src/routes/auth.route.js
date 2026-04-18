@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getMeUserController, logoutController, registerController, userLoginController, verifyEmailController } from "../controller/auth.controller.js";
 import { loginValidation, registerValidation } from "../middleware/validation.js";
 import { authVerifyMiddleware } from "../middleware/auth.middleware.js";
+import authLimiter from "../middleware/rateLimiter/authLimiter.js";
 
 const authRouter = Router();
 /**!SECTION
@@ -31,7 +32,7 @@ authRouter.get('/verify-email',verifyEmailController)
  * 
  */
 
-authRouter.post("/login",loginValidation,userLoginController)
+authRouter.post("/login",authLimiter, loginValidation,userLoginController)
 
 /**!SECTION
  * @description - getme
@@ -39,7 +40,7 @@ authRouter.post("/login",loginValidation,userLoginController)
  * @route - /api/auth/getme
  * @access - Private
  */
-authRouter.get("/getme",authVerifyMiddleware,getMeUserController)
+authRouter.get("/getme",authLimiter,authVerifyMiddleware,getMeUserController)
 
 /**
  * @description - logout
@@ -47,7 +48,7 @@ authRouter.get("/getme",authVerifyMiddleware,getMeUserController)
  * @route - /api/auth/logout
  * @access - Private
  */
-authRouter.post("/logout",authVerifyMiddleware,logoutController)
+authRouter.post("/logout",authLimiter,authVerifyMiddleware,logoutController)
 
 
 export default authRouter;
