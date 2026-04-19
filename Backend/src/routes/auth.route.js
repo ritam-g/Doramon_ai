@@ -48,7 +48,7 @@ authRouter.get("/getme",authLimiter,authVerifyMiddleware,getMeUserController)
  * @route - /api/auth/logout
  * @access - Private
  */
-authRouter.post("/logout",authLimiter,authVerifyMiddleware,logoutController)
+authRouter.get("/logout",authLimiter,authVerifyMiddleware,logoutController)
 
 
 export default authRouter;

@@ -2,6 +2,7 @@ import userModel from "../models/user.model.js";
 import sendEmail from "../services/email.service.js";
 import jwt from "jsonwebtoken";
 import 'dotenv/config';
+import { redis } from "../config/chache.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 const shouldSendVerificationEmail = (process.env.SEND_VERIFICATION_EMAIL || "false") === "true";
@@ -414,16 +415,36 @@ export async function getMeUserController(req, res, next) {
 
 export async function logoutController(req, res) {
     try {
-        res.clearCookie('token', getClearCookieOptions())
+        // 1️⃣ Get token from cookie
+        const token = req.cookies?.token;
+
+        if (token) {
+            // 2️⃣ Decode token to get expiry
+            const decoded = req.user;
+
+            if (decoded?.exp) {
+                const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+
+                if (ttl > 0) {
+                    // 3️⃣ Store token in Redis blacklist
+                    await redis.set(`blacklist:${token}`, "true", "EX", ttl);
+                }
+            }
+        }
+
+        // 4️⃣ Clear cookie
+        res.clearCookie('token', getClearCookieOptions());
+
         return res.status(200).json({
             success: true,
             message: 'Logout successful'
-        })
+        });
+
     } catch (err) {
         console.error('Logout error:', err);
         return res.status(500).json({
             success: false,
             message: 'Server error during logout'
-        })
+        });
     }
 }
